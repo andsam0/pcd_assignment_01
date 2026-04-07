@@ -117,8 +117,8 @@ public class ViewFrame extends JFrame {
 			// 2. DRAW POINTS
 			g2.setColor(Color.BLUE);
 			g2.setFont(new Font("Arial", Font.PLAIN, 80));
-			g2.drawString("0", ox - (int)(delta * 0.8), oy + (int)(delta * 0.4));
-			g2.drawString("0", ox + (int)(delta * 0.6), oy + (int)(delta * 0.4));
+			g2.drawString(String.valueOf(model.getPlayerScore()), ox - (int)(delta * 0.8), oy + (int)(delta * 0.4));
+			g2.drawString(String.valueOf(model.getCpuScore()), ox + (int)(delta * 0.6), oy + (int)(delta * 0.4));
 
 			// 3. DRAW SMALL BALLS
 			g2.setColor(Color.BLACK);

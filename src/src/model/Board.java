@@ -14,7 +14,9 @@ public class Board {
     private Ball cpuBall;
     private List<Ball> holes;
     private List<BoardObserver> observers = new ArrayList<>();
-    
+    private int playerScore = 0;
+    private int cpuScore = 0;
+
     public Board(){}
 
     public void addObserver(BoardObserver o) {
@@ -48,6 +50,11 @@ public class Board {
             Ball b = it.next();
             for (Ball hole : holes) {
                 if (isInHole(b, hole)) {
+                    if (b.getLastHitter() == playerBall) {
+                        playerScore++;
+                    } else if (b.getLastHitter() == cpuBall) {
+                        cpuScore++;
+                    }
                     it.remove();
                     break;
                 }
@@ -99,6 +106,10 @@ public class Board {
     public Boundary getBounds(){
         return bounds;
     }
+
+    public int getPlayerScore() { return playerScore; }
+
+    public int getCpuScore() { return cpuScore; }
 
     private boolean isInHole(Ball b, Ball hole) {
         double dx = b.getPos().x() - hole.getPos().x();

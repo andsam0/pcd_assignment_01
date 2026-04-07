@@ -17,6 +17,8 @@ public class ViewModel {
 	private BallViewInfo cpu;
 	private final List<BallViewInfo> holes;
 	private int framePerSec;
+	private int playerScore;
+	private int cpuScore;
 
 	
 	public ViewModel() {
@@ -26,6 +28,10 @@ public class ViewModel {
 	}
 	
 	public synchronized void update(Board board, int framePerSec) {
+
+		this.playerScore = board.getPlayerScore();
+		this.cpuScore = board.getCpuScore();
+
 		balls.clear();
 		for (var b: board.getBalls()) {
 			balls.add(new BallViewInfo(b.getPos(), b.getRadius()));
@@ -60,4 +66,7 @@ public class ViewModel {
 		return new ArrayList<>(holes);
 	}
 
+	public synchronized int getPlayerScore() { return playerScore; }
+
+	public synchronized int getCpuScore() { return cpuScore; }
 }

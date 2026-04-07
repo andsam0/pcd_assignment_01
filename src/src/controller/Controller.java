@@ -42,28 +42,9 @@ public class Controller extends Thread implements InputListener {
         }
     }
 
-    public void processInput(int keyCode) {
-        double intensity = 0.3;
-        V2d impulse = switch (keyCode) {
-            case java.awt.event.KeyEvent.VK_UP    -> new V2d(0, intensity);
-            case java.awt.event.KeyEvent.VK_DOWN  -> new V2d(0, -intensity);
-            case java.awt.event.KeyEvent.VK_LEFT  -> new V2d(-intensity, 0);
-            case java.awt.event.KeyEvent.VK_RIGHT -> new V2d(intensity, 0);
-            default -> null;
-        };
-
-        if (impulse != null) {
-            board.applyInputToPlayer(impulse);
-        }
-    }
-
-    public void stopSimulation() {
-        this.running = false;
-    }
-
     @Override
     public void onInputReceived(int keyCode) {
-        double intensity = 0.3; // Game-logic constant stays in the controller
+        double intensity = 0.3;
         V2d impulse = switch (keyCode) {
             case KeyEvent.VK_UP    -> new V2d(0, intensity);
             case KeyEvent.VK_DOWN  -> new V2d(0, -intensity);
@@ -73,7 +54,6 @@ public class Controller extends Thread implements InputListener {
         };
 
         if (impulse != null) {
-            // Apply the kick to the board
             board.applyInputToPlayer(impulse);
         }
     }

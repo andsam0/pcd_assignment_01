@@ -12,7 +12,8 @@ public class Ball {
     private double mass;   
     boolean active;
     private static double FRICTION_FACTOR = 0.25; 	/* 0 minimum */
-    private static double RESTITUTION_FACTOR = 1; 
+    private static double RESTITUTION_FACTOR = 1;
+    private Ball lastHitter;
 
     public Ball(P2d pos, double radius, double mass, V2d vel){
        this.pos = pos;
@@ -20,6 +21,14 @@ public class Ball {
        this.mass = mass;
        this.vel = vel;
        this.active = true;
+    }
+
+    public void setLastHitter(Ball hitter){
+        this.lastHitter = hitter;
+    }
+
+    public Ball getLastHitter() {
+        return lastHitter;
     }
 
     public void updateState(long dt, Board ctx){
@@ -87,14 +96,17 @@ public class Ball {
          */
         if (dist < minD && dist > 1e-6)  {
 
-	        /* 
+            a.setLastHitter(b);
+            b.setLastHitter(a);
+
+            /*
 	         * Collision case - what to do:
 	         * 
 	         * 1) solve overlaps, moving balls 
 	         * 2) update velocities
 	         * 
 	         */
-	        
+
         	/* dvn = util.V2d(nx,ny) = dv unit vector */
     
         	double nx = dx / dist;
