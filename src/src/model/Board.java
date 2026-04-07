@@ -64,12 +64,14 @@ public class Board {
         for (Ball hole : holes) {
             if (isInHole(playerBall, hole)) {
                 playerBall.setActive(false);
-                return; // Stop processing the frame
+                notifyObservers();
+                return;
             }
 
             if (isInHole(cpuBall, hole)) {
                 cpuBall.setActive(false);
-                return; // Stop processing the frame
+                notifyObservers();
+                return;
             }
         }
         // 4. Physical Collisions
@@ -124,6 +126,12 @@ public class Board {
     public synchronized void applyInputToPlayer(V2d impulse) {
         if (this.playerBall != null) {
             this.playerBall.applyKick(impulse);
+        }
+    }
+
+    public synchronized void applyInputToCpu(V2d impulse) {
+        if (this.cpuBall != null && this.cpuBall.isActive()) {
+            this.cpuBall.applyKick(impulse);
         }
     }
 }

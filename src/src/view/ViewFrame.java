@@ -62,11 +62,23 @@ public class ViewFrame extends JFrame {
 		// We check if the balls are null (which happens in your Board logic)
 		var pb = model.getPlayerBall();
 		var cb = model.getCpuBall();
+		var smallBalls = model.getBalls();
 
 		if (pb == null) {
 			showGameOverPopup("CPU WINS! The Player fell into a hole.");
 		} else if (cb == null) {
 			showGameOverPopup("PLAYER WINS! The CPU fell into a hole.");
+		} else if (smallBalls.isEmpty()) {
+			int pScore = model.getPlayerScore();
+			int cScore = model.getCpuScore();
+
+			if (pScore > cScore) {
+				showGameOverPopup("PLAYER WINS! Final Score: " + pScore + " - " + cScore);
+			} else if (cScore > pScore) {
+				showGameOverPopup("CPU WINS! Final Score: " + cScore + " - " + pScore);
+			} else {
+				showGameOverPopup("TIE! Final Score: " + pScore + " - " + cScore);
+			}
 		}
 	}
 

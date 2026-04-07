@@ -19,10 +19,6 @@ public class View implements BoardObserver {
 	public void render() {
 		frame.render();
 	}
-	
-	public ViewModel getViewModel() {
-		return viewModel;
-	}
 
 	@Override
 	public void modelUpdated(Board board) {
