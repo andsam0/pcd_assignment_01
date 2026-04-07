@@ -2,6 +2,7 @@ package model;
 
 import config.BoardConf;
 import util.Boundary;
+import util.V2d;
 
 import java.util.*;
 
@@ -12,10 +13,19 @@ public class Board {
     private Boundary bounds;
     private Ball cpuBall;
     private List<Ball> holes;
-    private String winner;
+    private List<BoardObserver> observers = new ArrayList<>();
     
-    public Board(){} 
-    
+    public Board(){}
+
+    public void addObserver(BoardObserver o) {
+        observers.add(o);
+    }
+
+    private void notifyObservers() {
+        for (var o : observers) {
+            o.modelUpdated(this);
+        }
+    }
     public void init(BoardConf conf) {
     	balls = conf.getSmallBalls();    	
     	playerBall = conf.getPlayerBall();
@@ -46,12 +56,12 @@ public class Board {
         // 3. Player/CPU Hole
         for (Ball hole : holes) {
             if (isInHole(playerBall, hole)) {
-                playerBall = null;
+                playerBall.setActive(false);
                 return; // Stop processing the frame
             }
 
             if (isInHole(cpuBall, hole)) {
-                cpuBall = null;
+                cpuBall.setActive(false);
                 return; // Stop processing the frame
             }
         }
@@ -62,11 +72,15 @@ public class Board {
             }
         }
     	for (var b: balls) {
-            Ball.resolveCollision(cpuBall, b);
-    		Ball.resolveCollision(playerBall, b);
+            if (cpuBall != null) Ball.resolveCollision(cpuBall, b);
+            if (playerBall != null) Ball.resolveCollision(playerBall, b);
     	}
 
-        Ball.resolveCollision(playerBall, cpuBall);
+        if (playerBall != null && cpuBall != null) {
+            Ball.resolveCollision(playerBall, cpuBall);
+        }
+
+        notifyObservers();
     	   	    	
     }
     
@@ -94,5 +108,11 @@ public class Board {
         // A ball is in the hole if its center enters the hole's radius
         double holeRadius = hole.getRadius();
         return distanceSquared < (holeRadius * holeRadius);
+    }
+
+    public synchronized void applyInputToPlayer(V2d impulse) {
+        if (this.playerBall != null) {
+            this.playerBall.applyKick(impulse);
+        }
     }
 }

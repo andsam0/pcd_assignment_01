@@ -10,7 +10,7 @@ public class Ball {
     private V2d vel;
     private double radius;
     private double mass;   
-    
+    boolean active;
     private static double FRICTION_FACTOR = 0.25; 	/* 0 minimum */
     private static double RESTITUTION_FACTOR = 1; 
 
@@ -19,6 +19,7 @@ public class Ball {
        this.radius = radius;
        this.mass = mass;
        this.vel = vel;
+       this.active = true;
     }
 
     public void updateState(long dt, Board ctx){
@@ -153,5 +154,9 @@ public class Ball {
     public double getRadius() {
     	return radius;
     }
+
+    public void setActive(boolean status) { this.active = status; }
+
+    public boolean isActive() { return this.active; }
 
 }

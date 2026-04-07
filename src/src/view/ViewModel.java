@@ -1,5 +1,6 @@
 package view;
 
+import controller.Controller;
 import model.Board;
 import util.P2d;
 import util.V2d;
@@ -19,8 +20,8 @@ public class ViewModel {
 
 	
 	public ViewModel() {
-        holes = new ArrayList<BallViewInfo>();;
-        balls = new ArrayList<BallViewInfo>();
+        holes = new ArrayList<>();;
+        balls = new ArrayList<>();
 		framePerSec = 0;
 	}
 	
@@ -32,8 +33,8 @@ public class ViewModel {
 		this.framePerSec = framePerSec;
 		var p = board.getPlayerBall();
 		var cpuBall = board.getCpuBall();
-		cpu = new BallViewInfo(cpuBall.getPos(), cpuBall.getRadius());
-		player = new BallViewInfo(p.getPos(), p.getRadius());
+		cpu = cpuBall.isActive() ? new BallViewInfo(cpuBall.getPos(), cpuBall.getRadius()) : null;
+		player = p.isActive() ? new BallViewInfo(p.getPos(), p.getRadius()) : null;
 		for(var h: board.getHoles()){
 			holes.add(new BallViewInfo(h.getPos(), h.getRadius()));
 		}

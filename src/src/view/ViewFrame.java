@@ -1,6 +1,6 @@
 package view;
 
-import util.V2d;
+import controller.InputListener;
 
 import java.awt.*;
 import java.awt.event.WindowAdapter;
@@ -13,10 +13,12 @@ public class ViewFrame extends JFrame {
     private ViewModel model;
     private RenderSynch sync;
 	private boolean gameEnded = false;
+	private InputListener listener;
 
-    public ViewFrame(ViewModel model, int w, int h){
+    public ViewFrame(ViewModel model, InputListener listener,  int w, int h){
     	this.model = model;
     	this.sync = new RenderSynch();
+		this.listener = listener;
 
     	setTitle("Assigment 1");
         setSize(w,h + 25);
@@ -31,24 +33,10 @@ public class ViewFrame extends JFrame {
 		this.addKeyListener(new java.awt.event.KeyAdapter() {
 			@Override
 			public void keyPressed(java.awt.event.KeyEvent e) {
-				double intensity = 0.3;
-				V2d impulse = new V2d(0, 0);
-
-                impulse = switch (e.getKeyCode()) {
-                    case java.awt.event.KeyEvent.VK_UP -> new V2d(0, intensity);
-                    case java.awt.event.KeyEvent.VK_DOWN -> new V2d(0, -intensity);
-                    case java.awt.event.KeyEvent.VK_LEFT -> new V2d(-intensity, 0);
-                    case java.awt.event.KeyEvent.VK_RIGHT -> new V2d(intensity, 0);
-                    default -> impulse;
-                };
-
-				// Pass the impulse to the model (which applies it to the player ball)
-				if (model.getPlayerBall() != null) {
-					// You'll need a method in your ViewModel to relay this
-//					model.applyInputToPlayer(impulse);
-				}
+				listener.onInputReceived(e.getKeyCode());
 			}
 		});
+
         addWindowListener(new WindowAdapter(){
 			public void windowClosing(WindowEvent ev){
 				System.exit(-1);
