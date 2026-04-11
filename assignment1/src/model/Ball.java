@@ -8,8 +8,8 @@ public class Ball {
     
     private P2d pos;
     private V2d vel;
-    private double radius;
-    private double mass;   
+    private final double radius;
+    private final double mass;
     boolean active;
     private static double FRICTION_FACTOR = 0.25; 	/* 0 minimum */
     private static double RESTITUTION_FACTOR = 1;

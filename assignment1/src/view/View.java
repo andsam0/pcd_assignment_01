@@ -7,13 +7,13 @@ import model.BoardObserver;
 
 public class View implements BoardObserver {
 
-	private ViewFrame frame;
-	private ViewModel viewModel;
+	private final ViewFrame frame;
+	private final ViewModel viewModel;
 	
 	public View(ViewModel model, InputListener listener, int w, int h) {
 		frame = new ViewFrame(model, listener, w, h);
 		frame.setVisible(true);
-		this.viewModel = model;
+		viewModel = model;
 	}
 		
 	public void render() {

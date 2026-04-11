@@ -13,12 +13,10 @@ public class ViewFrame extends JFrame {
     private ViewModel model;
     private RenderSynch sync;
 	private boolean gameEnded = false;
-	private InputListener listener;
 
     public ViewFrame(ViewModel model, InputListener listener,  int w, int h){
     	this.model = model;
     	this.sync = new RenderSynch();
-		this.listener = listener;
 
     	setTitle("Assigment 1");
         setSize(w,h + 25);

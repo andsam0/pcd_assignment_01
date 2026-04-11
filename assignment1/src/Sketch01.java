@@ -1,7 +1,6 @@
 import controller.BotAgent;
 import controller.Controller;
 import model.Board;
-import util.V2d;
 import view.View;
 import view.ViewModel;
 

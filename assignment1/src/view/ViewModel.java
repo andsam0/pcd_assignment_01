@@ -1,9 +1,7 @@
 package view;
 
-import controller.Controller;
 import model.Board;
 import util.P2d;
-import util.V2d;
 
 import java.util.ArrayList;
 import java.util.List;

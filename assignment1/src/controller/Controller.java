@@ -25,20 +25,7 @@ public class Controller extends Thread implements InputListener {
             long current = System.currentTimeMillis();
             long elapsed = current - lastUpdateTime;
             lastUpdateTime = current;
-
-            // 1. Update Physics
             board.updateState(elapsed);
-
-            // 2. Calculate FPS
-//            nFrames++;
-//            int fps = 0;
-//            long totalTime = current - t0;
-//            if (totalTime > 0) {
-//                fps = (int) (nFrames * 1000 / totalTime);
-//            }
-
-            // 3. Sync with View
-//            viewModel.update(board, fps);
         }
     }
 

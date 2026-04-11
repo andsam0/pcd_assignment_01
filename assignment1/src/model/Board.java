@@ -13,7 +13,7 @@ public class Board {
     private Boundary bounds;
     private Ball cpuBall;
     private List<Ball> holes;
-    private List<BoardObserver> observers = new ArrayList<>();
+    private final List<BoardObserver> observers = new ArrayList<>();
     private int playerScore = 0;
     private int cpuScore = 0;
 
@@ -37,7 +37,6 @@ public class Board {
     }
     
     public void updateState(long dt) {
-
         // 1. Standard Movement
     	playerBall.updateState(dt, this);
         cpuBall.updateState(dt, this);
@@ -67,7 +66,6 @@ public class Board {
                 notifyObservers();
                 return;
             }
-
             if (isInHole(cpuBall, hole)) {
                 cpuBall.setActive(false);
                 notifyObservers();
@@ -80,17 +78,15 @@ public class Board {
                 Ball.resolveCollision(balls.get(i), balls.get(j));
             }
         }
+
     	for (var b: balls) {
             if (cpuBall != null) Ball.resolveCollision(cpuBall, b);
             if (playerBall != null) Ball.resolveCollision(playerBall, b);
     	}
-
         if (playerBall != null && cpuBall != null) {
             Ball.resolveCollision(playerBall, cpuBall);
         }
-
         notifyObservers();
-    	   	    	
     }
     
     public List<Ball> getBalls(){
