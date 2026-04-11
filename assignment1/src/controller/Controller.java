@@ -2,8 +2,6 @@ package controller;
 
 import model.Board;
 import util.V2d;
-import view.View;
-import view.ViewModel;
 
 import java.awt.event.KeyEvent;
 
