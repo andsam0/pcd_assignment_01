@@ -5,25 +5,26 @@ import util.P2d;
 import util.V2d;
 
 public class Ball {
-    
+
     private P2d pos;
     private V2d vel;
+    private final CollisionMonitor collisionMonitor = new CollisionMonitor();
     private final double radius;
     private final double mass;
     boolean active;
-    private static double FRICTION_FACTOR = 0.25; 	/* 0 minimum */
+    private static double FRICTION_FACTOR = 0.25;    /* 0 minimum */
     private static double RESTITUTION_FACTOR = 1;
     private Ball lastHitter;
 
-    public Ball(P2d pos, double radius, double mass, V2d vel){
-       this.pos = pos;
-       this.radius = radius;
-       this.mass = mass;
-       this.vel = vel;
-       this.active = true;
+    public Ball(P2d pos, double radius, double mass, V2d vel) {
+        this.pos = pos;
+        this.radius = radius;
+        this.mass = mass;
+        this.vel = vel;
+        this.active = true;
     }
 
-    public void setLastHitter(Ball hitter){
+    public void setLastHitter(Ball hitter) {
         this.lastHitter = hitter;
     }
 
@@ -31,144 +32,168 @@ public class Ball {
         return lastHitter;
     }
 
-    public void updateState(long dt, Board ctx){
+    public void updateState(long dt, Board ctx) {
         double speed = vel.abs();
-        double dt_scaled = dt*0.001;
-    	if (speed > 0.001) {
-            double dec    = FRICTION_FACTOR * dt_scaled;
+        double dt_scaled = dt * 0.001;
+        if (speed > 0.001) {
+            double dec = FRICTION_FACTOR * dt_scaled;
             double factor = Math.max(0, speed - dec) / speed;
             vel = vel.mul(factor);
         } else {
-        	vel = new V2d(0,0);
+            vel = new V2d(0, 0);
         }
         pos = pos.sum(vel.mul(dt_scaled));
-     	applyBoundaryConstraints(ctx);
+        applyBoundaryConstraints(ctx);
     }
-    
+
     public void applyKick(V2d impulse) {
         this.vel = this.vel.sum(impulse);
     }
 
     /**
-     * 
+     *
      * Keep the ball inside the boundaries, updating the velocity in the case of bounces
-     * 
+     *
      * @param ctx
      */
-    private void applyBoundaryConstraints(Board ctx){
+    private void applyBoundaryConstraints(Board ctx) {
         Boundary bounds = ctx.getBounds();
-        if (pos.x() + radius > bounds.x1()){
+        if (pos.x() + radius > bounds.x1()) {
             pos = new P2d(bounds.x1() - radius, pos.y());
             vel = vel.getSwappedX();
-        } else if (pos.x() - radius < bounds.x0()){
+        } else if (pos.x() - radius < bounds.x0()) {
             pos = new P2d(bounds.x0() + radius, pos.y());
             vel = vel.getSwappedX();
-        } else if (pos.y() + radius > bounds.y1()){
+        } else if (pos.y() + radius > bounds.y1()) {
             pos = new P2d(pos.x(), bounds.y1() - radius);
             vel = vel.getSwappedY();
-        } else if (pos.y() - radius < bounds.y0()){
+        } else if (pos.y() - radius < bounds.y0()) {
             pos = new P2d(pos.x(), bounds.y0() + radius);
             vel = vel.getSwappedY();
         }
     }
 
     /**
-     * 
+     *
      * Resolving collision between 2 balls, updating their position and velocity
-     * 
+     *
      * @param a
      * @param b
      */
     public static void resolveCollision(Ball a, Ball b) {
-        
-    	/* check if there is a collision */
-    	
-    	/* compute dv = b.pos - a.pos vector */
 
-    	double dx   = b.pos.x() - a.pos.x();
-        double dy   = b.pos.y() - a.pos.y();
+        /* check if there is a collision */
+
+        /* compute dv = b.pos - a.pos vector */
+
+        double dx = b.pos.x() - a.pos.x();
+        double dy = b.pos.y() - a.pos.y();
         double dist = Math.hypot(dx, dy);
         double minD = a.radius + b.radius;
-        
-        /* 
-         * There is a collision if the distance between the two balls is less than the sum of the radii 
-         * 
+
+        /*
+         * There is a collision if the distance between the two balls is less than the sum of the radii
+         *
          */
-        if (dist < minD && dist > 1e-6)  {
+        if (dist < minD && dist > 1e-6) {
 
             a.setLastHitter(b);
             b.setLastHitter(a);
 
             /*
-	         * Collision case - what to do:
-	         * 
-	         * 1) solve overlaps, moving balls 
-	         * 2) update velocities
-	         * 
-	         */
+             * Collision case - what to do:
+             *
+             * 1) solve overlaps, moving balls
+             * 2) update velocities
+             *
+             */
 
-        	/* dvn = util.V2d(nx,ny) = dv unit vector */
-    
-        	double nx = dx / dist;
-	        double ny = dy / dist;
-	
-	        /* 
-	         * 
-	         * Update positions to solve overlaps, moving balls along dvn
-	         * - the displacements is proportional to the mass
-	         * 
-	         */
-	        double overlap = minD - dist;
-	        double totalM  = a.mass + b.mass;
-	
-	        double a_factor = overlap * (b.mass / totalM);
-	        double a_deltax = nx * a_factor; 
-	        double a_deltay = ny * a_factor; 
-	        
-	        a.pos = new P2d(a.getPos().x() - a_deltax, a.getPos().y() - a_deltay);
-	        
-	        double b_factor = overlap * (a.mass / totalM);
-	        double b_deltax = nx * b_factor; 
-	        double b_deltay = ny * b_factor; 
-	
-	        b.pos = new P2d(b.getPos().x() + b_deltax, b.getPos().y() + b_deltay);
-	
-	        /* Update velocities  */
-	        
-	        /* relative speed along the normal vector*/
-	
-	        double dvx = b.vel.x() - a.vel.x();
-	        double dvy = b.vel.y() - a.vel.y(); 
-	        double dvn = dvx * nx + dvy * ny;
-	
-	        if (dvn <= 0) { /* if not already separating, update velocities */
-	        	
-	        	double imp = -(1 + RESTITUTION_FACTOR) * dvn / (1.0/a.getMass() + 1.0/b.getMass());        
-	        	a.vel = new V2d(a.vel.x() - (imp / a.mass) * nx, a.vel.y() - (imp / a.mass) * ny);                
-	        	b.vel = new V2d(b.vel.x() + (imp / b.mass) * nx, b.vel.y() + (imp / b.mass) * ny);
-	        }
+            /* dvn = util.V2d(nx,ny) = dv unit vector */
+
+            double nx = dx / dist;
+            double ny = dy / dist;
+
+            /*
+             *
+             * Update positions to solve overlaps, moving balls along dvn
+             * - the displacements is proportional to the mass
+             *
+             */
+            double overlap = minD - dist;
+            double totalM = a.mass + b.mass;
+
+            double a_factor = overlap * (b.mass / totalM);
+            double a_deltax = nx * a_factor;
+            double a_deltay = ny * a_factor;
+
+            a.collisionMonitor.addPosition(new P2d(- a_deltax, - a_deltay));
+//            a.pos = new P2d(a.getPos().x() - a_deltax, a.getPos().y() - a_deltay);
+
+            double b_factor = overlap * (a.mass / totalM);
+            double b_deltax = nx * b_factor;
+            double b_deltay = ny * b_factor;
+
+            b.collisionMonitor.addPosition(new P2d(+ b_deltax, + b_deltay));
+//            b.pos = new P2d(b.getPos().x() + b_deltax, b.getPos().y() + b_deltay);
+
+            /* Update velocities  */
+
+            /* relative speed along the normal vector*/
+
+            double dvx = b.vel.x() - a.vel.x();
+            double dvy = b.vel.y() - a.vel.y();
+            double dvn = dvx * nx + dvy * ny;
+
+            if (dvn <= 0) { /* if not already separating, update velocities */
+
+                double imp = -(1 + RESTITUTION_FACTOR) * dvn / (1.0 / a.getMass() + 1.0 / b.getMass());
+                a.collisionMonitor.addVelocity(new V2d(- (imp / a.mass) * nx, - (imp / a.mass) * ny));
+                b.collisionMonitor.addVelocity(new V2d(+ (imp / b.mass) * nx, + (imp / b.mass) * ny));
+//                a.vel = new V2d(a.vel.x() - (imp / a.mass) * nx, a.vel.y() - (imp / a.mass) * ny);
+//                b.vel = new V2d(b.vel.x() + (imp / b.mass) * nx, b.vel.y() + (imp / b.mass) * ny);
+            }
         }
     }
 
-    
-    public P2d getPos(){        
-    	return pos;
+    public static void applyCollisions(Ball ball){
+        if(ball.collisionMonitor.getPositionDisplacements().isEmpty()) return;
+
+        var positionDisplacements = ball.collisionMonitor.getPositionDisplacements();
+        double avgDx = positionDisplacements.stream().mapToDouble(P2d::x).average().orElse(0);
+        double avgDy = positionDisplacements.stream().mapToDouble(P2d::y).average().orElse(0);
+        ball.pos = new P2d(ball.pos.x()+avgDx,ball.pos.y()+avgDy);
+
+        var velocityDisplacements = ball.collisionMonitor.getVelocityDisplacements();
+        double dvX = velocityDisplacements.stream().mapToDouble(V2d::x).sum();
+        double dvY = velocityDisplacements.stream().mapToDouble(V2d::y).sum();
+        ball.vel = ball.vel.sum(new V2d(dvX,dvY));
+
+        ball.collisionMonitor.clear();
     }
-    
+
+
+    public P2d getPos() {
+        return pos;
+    }
+
     public double getMass() {
-    	return mass;
+        return mass;
     }
-    
+
     public V2d getVel() {
-    	return vel;
+        return vel;
     }
-    
+
     public double getRadius() {
-    	return radius;
+        return radius;
     }
 
-    public void setActive(boolean status) { this.active = status; }
+    public void setActive(boolean status) {
+        this.active = status;
+    }
 
-    public boolean isActive() { return this.active; }
+    public boolean isActive() {
+        return this.active;
+    }
 
 }

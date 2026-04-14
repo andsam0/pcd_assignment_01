@@ -79,13 +79,20 @@ public class Board {
             }
         }
 
-    	for (var b: balls) {
+        for (var b: balls) {
             if (cpuBall != null) Ball.resolveCollision(cpuBall, b);
             if (playerBall != null) Ball.resolveCollision(playerBall, b);
-    	}
+        }
         if (playerBall != null && cpuBall != null) {
             Ball.resolveCollision(playerBall, cpuBall);
         }
+
+        for (int i = 0; i < balls.size() - 1; i++) {
+            Ball.applyCollisions(balls.get(i));
+        }
+        Ball.applyCollisions(playerBall);
+        Ball.applyCollisions(cpuBall);
+
         notifyObservers();
     }
     
