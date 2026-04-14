@@ -1,9 +1,9 @@
 package model;
 
 import config.BoardConf;
-import util.Barrier;
-import util.BarrierImpl;
+import util.Latch;
 import util.Boundary;
+import util.LatchImpl;
 import util.V2d;
 
 import java.util.*;
@@ -77,15 +77,24 @@ public class Board {
         // 4. Physical Collisions
 
         // TODO: finire
-//        int nCores = Runtime.getRuntime().availableProcessors()+1;
-//        Barrier barrier = new BarrierImpl(nCores);
-//        List<>
-
-    	for (int i = 0; i < balls.size() - 1; i++) {
-            for (int j = i + 1; j < balls.size(); j++) {
-                Ball.resolveCollision(balls.get(i), balls.get(j));
-            }
+        int nCores = Runtime.getRuntime().availableProcessors()+1;
+        Latch latch = new LatchImpl(nCores);
+        List<CollisionResolverWorker> workers = new ArrayList<>();
+        final int ballsChunkSize = this.balls.size() / nCores;
+        for(int i = 0; i<nCores; i++){
+            final int start = i * ballsChunkSize;
+            final int end = (i+1) * ballsChunkSize;
+            workers.add(new CollisionResolverWorker(latch, this.balls.subList(start, end), this.balls));
         }
+        for(CollisionResolverWorker worker : workers){
+            worker.start();
+        }
+
+//    	for (int i = 0; i < balls.size() - 1; i++) {
+//            for (int j = i + 1; j < balls.size(); j++) {
+//                Ball.resolveCollision(balls.get(i), balls.get(j));
+//            }
+//        }
 
         for (var b: balls) {
             if (cpuBall != null) Ball.resolveCollision(cpuBall, b);
@@ -93,6 +102,12 @@ public class Board {
         }
         if (playerBall != null && cpuBall != null) {
             Ball.resolveCollision(playerBall, cpuBall);
+        }
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
 
         for (int i = 0; i < balls.size() - 1; i++) {

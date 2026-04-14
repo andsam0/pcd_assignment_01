@@ -97,6 +97,7 @@ public class Ball {
          */
         if (dist < minD && dist > 1e-6) {
 
+            // TODO: da vedere
             a.setLastHitter(b);
             b.setLastHitter(a);
 
