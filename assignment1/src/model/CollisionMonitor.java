@@ -19,18 +19,16 @@ public class CollisionMonitor {
         this.positionDisplacements.add(position);
     }
 
-    // reminder: this should only be accessed by the thread responsible for this ball
-    public void clear(){
+    public synchronized void clear(){
         this.velocityDisplacements.clear();
         this.positionDisplacements.clear();
     }
 
-    // idem with potatoes
-    public List<V2d> getVelocityDisplacements(){
+    public synchronized List<V2d> getVelocityDisplacements(){
         return this.velocityDisplacements;
     }
 
-    public List<P2d> getPositionDisplacements(){
+    public synchronized List<P2d> getPositionDisplacements(){
         return this.positionDisplacements;
     }
 
