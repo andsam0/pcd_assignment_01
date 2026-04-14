@@ -9,7 +9,7 @@ public class Sketch01 {
 	public static void main(String[] argv) {
 
 		Board model = new Board();
-		model.init(new config.LargeBoardConf());
+		model.init(new config.MassiveBoardConf());
 		ViewModel viewModel = new ViewModel();
 
 		Controller controller = new Controller(model);

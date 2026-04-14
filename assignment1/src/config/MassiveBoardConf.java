@@ -12,15 +12,17 @@ public class MassiveBoardConf implements BoardConf {
 
 	@Override
 	public Ball getPlayerBall() {
-		return  new Ball(new P2d(0, -0.75), 0.05, 1.5, new V2d(0,0));
+		return new Ball(new P2d(-0.75, -0.75), 0.05, 1.5, new V2d(0,0));
 	}
 
 	@Override
-	public Ball getCpuBall() {return new Ball(new P2d(0.75, 0.75), 0.05, 1.5, new V2d(0,1));	}
+	public Ball getCpuBall() {return new Ball(new P2d(0.75, -0.75), 0.05, 1.5, new V2d(0,0));	}
 
 	@Override
 	public List<Ball> getHoles() {
-		return List.of();
+		Ball h1 = new Ball(new P2d(-1.5, 1), 0.3, 1.5, new V2d(0, 0));
+		Ball h2 = new Ball(new P2d(1.5, 1), 0.3, 1.5, new V2d(0, 0));
+		return List.of(h1, h2);
 	}
 
 	@Override
