@@ -80,11 +80,8 @@ public class Board {
         int nCores = Runtime.getRuntime().availableProcessors()+1;
         Latch latch = new LatchImpl(nCores);
         List<CollisionResolverWorker> workers = new ArrayList<>();
-        final int ballsChunkSize = this.balls.size() / nCores;
         for(int i = 0; i<nCores; i++){
-            final int start = i * ballsChunkSize;
-            final int end = (i+1) * ballsChunkSize;
-            workers.add(new CollisionResolverWorker(latch, this.balls.subList(start, end), this.balls));
+            workers.add(new CollisionResolverWorker(latch, this.balls, i, nCores));
         }
         for(CollisionResolverWorker worker : workers){
             worker.start();

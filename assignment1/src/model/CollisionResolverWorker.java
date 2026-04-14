@@ -7,19 +7,22 @@ import java.util.List;
 public class CollisionResolverWorker extends Thread {
 
     private Latch latch;
-    private List<Ball> myBalls;
-    private List<Ball> allBalls;
+    private List<Ball> balls;
+    private final int start;
+    private final int step;
 
-    public CollisionResolverWorker(Latch latch, List<Ball> myBalls, List<Ball> allBalls){
+    public CollisionResolverWorker(Latch latch, List<Ball> balls, int start, int step){
         this.latch = latch;
-        this.myBalls = myBalls;
-        this.allBalls = allBalls;
+        this.balls = balls;
+        this.start = start;
+        this.step = step;
     }
 
     public void run(){
-        for(Ball myBall : myBalls){
-            for(Ball otherBall : allBalls){
-                if(otherBall == myBall) continue;
+        for(int i=start; i<balls.size(); i+=step){
+            Ball myBall = balls.get(i);
+            for(int j=i+1; j<balls.size(); j++){
+                Ball otherBall = balls.get(j);
                 Ball.resolveCollision(myBall,otherBall);
             }
         }
