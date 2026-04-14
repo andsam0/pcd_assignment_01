@@ -1,6 +1,8 @@
 package model;
 
 import config.BoardConf;
+import util.Barrier;
+import util.BarrierImpl;
 import util.Boundary;
 import util.V2d;
 
@@ -73,6 +75,12 @@ public class Board {
             }
         }
         // 4. Physical Collisions
+
+        // TODO: finire
+//        int nCores = Runtime.getRuntime().availableProcessors()+1;
+//        Barrier barrier = new BarrierImpl(nCores);
+//        List<>
+
     	for (int i = 0; i < balls.size() - 1; i++) {
             for (int j = i + 1; j < balls.size(); j++) {
                 Ball.resolveCollision(balls.get(i), balls.get(j));
