@@ -20,7 +20,7 @@ public class ViewModel {
 
 	
 	public ViewModel() {
-        holes = new ArrayList<>();;
+        holes = new ArrayList<>();
         balls = new ArrayList<>();
 		framePerSec = 0;
 	}
@@ -39,6 +39,8 @@ public class ViewModel {
 		var cpuBall = board.getCpuBall();
 		cpu = cpuBall.isActive() ? new BallViewInfo(cpuBall.getPos(), cpuBall.getRadius()) : null;
 		player = p.isActive() ? new BallViewInfo(p.getPos(), p.getRadius()) : null;
+
+		holes.clear();
 		for(var h: board.getHoles()){
 			holes.add(new BallViewInfo(h.getPos(), h.getRadius()));
 		}
