@@ -7,6 +7,9 @@ import util.LatchImpl;
 import util.V2d;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class Board {
 
@@ -38,7 +41,7 @@ public class Board {
         holes = conf.getHoles();
     }
     
-    public void updateState(long dt) {
+    public void updateState(long dt) throws InterruptedException {
         // 1. Standard Movement
     	playerBall.updateState(dt, this);
         cpuBall.updateState(dt, this);
@@ -75,23 +78,12 @@ public class Board {
             }
         }
         // 4. Physical Collisions
-
-        // TODO: finire
         int nCores = Runtime.getRuntime().availableProcessors()+1;
+        ExecutorService executor = Executors.newFixedThreadPool(nCores);
         Latch latch = new LatchImpl(nCores);
-        List<CollisionResolverWorker> workers = new ArrayList<>();
-        for(int i = 0; i<nCores; i++){
-            workers.add(new CollisionResolverWorker(latch, this.balls, i, nCores));
+        for(int i = 0; i<nCores; i++) {
+            executor.execute(new CollisionResolvingTask(latch, this.balls, i, nCores));
         }
-        for(CollisionResolverWorker worker : workers){
-            worker.start();
-        }
-
-//    	for (int i = 0; i < balls.size() - 1; i++) {
-//            for (int j = i + 1; j < balls.size(); j++) {
-//                Ball.resolveCollision(balls.get(i), balls.get(j));
-//            }
-//        }
 
         for (var b: balls) {
             if (cpuBall != null) Ball.resolveCollision(cpuBall, b);
@@ -101,11 +93,8 @@ public class Board {
             Ball.resolveCollision(playerBall, cpuBall);
         }
 
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        executor.shutdown();
+        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
 
         for (int i = 0; i < balls.size() - 1; i++) {
             Ball.applyCollisions(balls.get(i));

@@ -23,7 +23,11 @@ public class Controller extends Thread implements InputListener {
             long current = System.currentTimeMillis();
             long elapsed = current - lastUpdateTime;
             lastUpdateTime = current;
-            board.updateState(elapsed);
+            try {
+                board.updateState(elapsed);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

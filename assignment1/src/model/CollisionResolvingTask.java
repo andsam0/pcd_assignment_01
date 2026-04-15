@@ -4,14 +4,14 @@ import util.Latch;
 
 import java.util.List;
 
-public class CollisionResolverWorker extends Thread {
+public class CollisionResolvingTask implements Runnable {
 
     private Latch latch;
     private List<Ball> balls;
     private final int start;
     private final int step;
 
-    public CollisionResolverWorker(Latch latch, List<Ball> balls, int start, int step){
+    public CollisionResolvingTask(Latch latch, List<Ball> balls, int start, int step){
         this.latch = latch;
         this.balls = balls;
         this.start = start;
