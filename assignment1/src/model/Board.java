@@ -7,6 +7,7 @@ import util.LatchImpl;
 import util.V2d;
 
 import java.util.*;
+import java.util.concurrent.Semaphore;
 
 public class Board {
 
@@ -18,6 +19,7 @@ public class Board {
     private final List<BoardObserver> observers = new ArrayList<>();
     private int playerScore = 0;
     private int cpuScore = 0;
+    private Latch latch;
 
     public Board(){}
 
@@ -36,6 +38,17 @@ public class Board {
         cpuBall = conf.getCpuBall();
     	bounds = conf.getBoardBoundary();
         holes = conf.getHoles();
+
+        int nCores = Runtime.getRuntime().availableProcessors()+1;
+        Semaphore semaphore = new Semaphore(0);
+        latch = new LatchImpl(nCores, semaphore);
+        List<CollisionResolverWorker> workers = new ArrayList<>();
+        for(int i = 0; i<nCores; i++){
+            workers.add(new CollisionResolverWorker(latch, semaphore, this.balls, i, nCores));
+        }
+        for(CollisionResolverWorker worker : workers){
+            worker.start();
+        }
     }
     
     public void updateState(long dt) {
@@ -77,21 +90,22 @@ public class Board {
         // 4. Physical Collisions
 
         // TODO: finire
-        int nCores = Runtime.getRuntime().availableProcessors()+1;
-        Latch latch = new LatchImpl(nCores);
-        List<CollisionResolverWorker> workers = new ArrayList<>();
-        for(int i = 0; i<nCores; i++){
-            workers.add(new CollisionResolverWorker(latch, this.balls, i, nCores));
-        }
-        for(CollisionResolverWorker worker : workers){
-            worker.start();
-        }
+//        int nCores = Runtime.getRuntime().availableProcessors()+1;
+//        Latch latch = new LatchImpl(nCores);
+//        List<CollisionResolverWorker> workers = new ArrayList<>();
+//        for(int i = 0; i<nCores; i++){
+//            workers.add(new CollisionResolverWorker(latch, this.balls, i, nCores));
+//        }
+//        for(CollisionResolverWorker worker : workers){
+//            worker.start();
+//        }
 
 //    	for (int i = 0; i < balls.size() - 1; i++) {
 //            for (int j = i + 1; j < balls.size(); j++) {
 //                Ball.resolveCollision(balls.get(i), balls.get(j));
 //            }
 //        }
+        latch.reset();
 
         for (var b: balls) {
             if (cpuBall != null) Ball.resolveCollision(cpuBall, b);
