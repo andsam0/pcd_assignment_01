@@ -1,15 +1,11 @@
 package model;
 
 import config.BoardConf;
-import util.Latch;
 import util.Boundary;
-import util.LatchImpl;
 import util.V2d;
 
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class Board {
 
@@ -21,6 +17,9 @@ public class Board {
     private final List<BoardObserver> observers = new ArrayList<>();
     private int playerScore = 0;
     private int cpuScore = 0;
+    private final int nCores = Runtime.getRuntime().availableProcessors()+1;
+    private ExecutorService executor;
+    private CyclicBarrier barrier;
 
     public Board(){}
 
@@ -39,6 +38,8 @@ public class Board {
         cpuBall = conf.getCpuBall();
     	bounds = conf.getBoardBoundary();
         holes = conf.getHoles();
+        executor = Executors.newFixedThreadPool(nCores);
+        barrier = new CyclicBarrier(nCores+1); // +1 for the main thread
     }
     
     public void updateState(long dt) throws InterruptedException {
@@ -78,11 +79,9 @@ public class Board {
             }
         }
         // 4. Physical Collisions
-        int nCores = Runtime.getRuntime().availableProcessors()+1;
-        ExecutorService executor = Executors.newFixedThreadPool(nCores);
-        Latch latch = new LatchImpl(nCores);
+
         for(int i = 0; i<nCores; i++) {
-            executor.execute(new CollisionResolvingTask(latch, this.balls, i, nCores));
+            executor.execute(new CollisionResolvingTask(barrier, this.balls, i, nCores));
         }
 
         for (var b: balls) {
@@ -93,8 +92,11 @@ public class Board {
             Ball.resolveCollision(playerBall, cpuBall);
         }
 
-        executor.shutdown();
-        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+        try {
+            barrier.await();
+        } catch (BrokenBarrierException e) {
+            throw new RuntimeException(e);
+        }
 
         for (int i = 0; i < balls.size() - 1; i++) {
             Ball.applyCollisions(balls.get(i));
