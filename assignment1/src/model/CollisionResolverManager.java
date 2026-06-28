@@ -6,13 +6,13 @@ import java.util.concurrent.Semaphore;
 
 public class CollisionResolverManager {
     private final List<CollisionResolverWorker> workers = new ArrayList<>();
-    private final Semaphore doneSignal = new Semaphore(0);
+    private final Semaphore endWorkSem = new Semaphore(0);
     private final int numWorkers;
 
     public CollisionResolverManager(List<Ball> balls, int numWorkers) {
         this.numWorkers = numWorkers;
         for (int i = 0; i < numWorkers; i++) {
-            CollisionResolverWorker w = new CollisionResolverWorker(balls, i, numWorkers, doneSignal);
+            CollisionResolverWorker w = new CollisionResolverWorker(balls, i, numWorkers, endWorkSem);
             workers.add(w);
             w.start();
         }
@@ -23,7 +23,7 @@ public class CollisionResolverManager {
     }
 
     public void waitForWorkEnd() throws InterruptedException {
-        doneSignal.acquire(numWorkers);
+        endWorkSem.acquire(numWorkers);
     }
 
 }

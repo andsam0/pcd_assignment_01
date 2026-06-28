@@ -12,8 +12,8 @@ public class Ball {
     private final double radius;
     private final double mass;
     boolean active;
-    private static double FRICTION_FACTOR = 0.25;    /* 0 minimum */
-    private static double RESTITUTION_FACTOR = 1;
+    private static final double FRICTION_FACTOR = 0.25;    /* 0 minimum */
+    private static final double RESTITUTION_FACTOR = 1;
     private Ball lastHitter;
 
     public Ball(P2d pos, double radius, double mass, V2d vel) {
@@ -98,8 +98,10 @@ public class Ball {
         if (dist < minD && dist > 1e-6) {
 
             // TODO: da vedere
-            a.setLastHitter(b);
-            b.setLastHitter(a);
+//            a.setLastHitter(b);
+//            b.setLastHitter(a);
+            a.collisionMonitor.addLastHitter(a, b);
+            b.collisionMonitor.addLastHitter(b, a);
 
             /*
              * Collision case - what to do:
@@ -127,14 +129,14 @@ public class Ball {
             double a_deltax = nx * a_factor;
             double a_deltay = ny * a_factor;
 
-            a.collisionMonitor.addPosition(new P2d(- a_deltax, - a_deltay));
+            a.collisionMonitor.addPosition(new P2d(-a_deltax, -a_deltay));
 //            a.pos = new P2d(a.getPos().x() - a_deltax, a.getPos().y() - a_deltay);
 
             double b_factor = overlap * (a.mass / totalM);
             double b_deltax = nx * b_factor;
             double b_deltay = ny * b_factor;
 
-            b.collisionMonitor.addPosition(new P2d(+ b_deltax, + b_deltay));
+            b.collisionMonitor.addPosition(new P2d(+b_deltax, +b_deltay));
 //            b.pos = new P2d(b.getPos().x() + b_deltax, b.getPos().y() + b_deltay);
 
             /* Update velocities  */
@@ -148,26 +150,28 @@ public class Ball {
             if (dvn <= 0) { /* if not already separating, update velocities */
 
                 double imp = -(1 + RESTITUTION_FACTOR) * dvn / (1.0 / a.getMass() + 1.0 / b.getMass());
-                a.collisionMonitor.addVelocity(new V2d(- (imp / a.mass) * nx, - (imp / a.mass) * ny));
-                b.collisionMonitor.addVelocity(new V2d(+ (imp / b.mass) * nx, + (imp / b.mass) * ny));
+                a.collisionMonitor.addVelocity(new V2d(-(imp / a.mass) * nx, -(imp / a.mass) * ny));
+                b.collisionMonitor.addVelocity(new V2d(+(imp / b.mass) * nx, +(imp / b.mass) * ny));
 //                a.vel = new V2d(a.vel.x() - (imp / a.mass) * nx, a.vel.y() - (imp / a.mass) * ny);
 //                b.vel = new V2d(b.vel.x() + (imp / b.mass) * nx, b.vel.y() + (imp / b.mass) * ny);
             }
         }
     }
 
-    public static void applyCollisions(Ball ball){
-        if(ball.collisionMonitor.getPositionDisplacements().isEmpty()) return;
+    public static void applyCollisions(Ball ball) {
+        if (ball.collisionMonitor.getPositionDisplacements().isEmpty()) return;
 
         var positionDisplacements = ball.collisionMonitor.getPositionDisplacements();
         double avgDx = positionDisplacements.stream().mapToDouble(P2d::x).average().orElse(0);
         double avgDy = positionDisplacements.stream().mapToDouble(P2d::y).average().orElse(0);
-        ball.pos = new P2d(ball.pos.x()+avgDx,ball.pos.y()+avgDy);
+        ball.pos = new P2d(ball.pos.x() + avgDx, ball.pos.y() + avgDy);
 
         var velocityDisplacements = ball.collisionMonitor.getVelocityDisplacements();
         double dvX = velocityDisplacements.stream().mapToDouble(V2d::x).sum();
         double dvY = velocityDisplacements.stream().mapToDouble(V2d::y).sum();
-        ball.vel = ball.vel.sum(new V2d(dvX,dvY));
+        ball.vel = ball.vel.sum(new V2d(dvX, dvY));
+
+        ball.setLastHitter(ball.collisionMonitor.getLastHitter(ball));
 
         ball.collisionMonitor.clear();
     }
