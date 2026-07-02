@@ -11,13 +11,13 @@ L'assignment ha l'obiettivo di realizzare una versione concorrente del gioco `Po
 
 = Aspetti rilevanti per la concorrenza
 
-La logica principale del programma consiste nell'aggiornare lo stato del sistema, composto da un insieme di palle (giocatore e CPU) e palline, a seguito delle collisioni tra esse. Dato il costo quadratico ($O(n^2)$) del calcolo delle collisioni tra $n$ palline e dato che $n$ può aumentare significativamente (vedi SmallBoard vs MassiveBoard), la parte computazionalmente più dispendiosa consiste nel calcolare le collisioni tra queste ed è quella su cui si siamo concentrati. La realizzazione di una versione concorrente di questo calcolo deve prestare attenzione a possibili accessi simultanei a una singola pallina da parte di entità computazionali distinte.
+La logica principale del programma consiste nell'aggiornare lo stato del sistema, composto da un insieme di palle (giocatore e CPU) e palline, a seguito delle collisioni tra esse. Dato il costo quadratico ($O(n^2)$) del calcolo delle collisioni tra $n$ palline e dato che $n$ può aumentare significativamente (vedi `SmallBoard` vs `MassiveBoard`), la parte computazionalmente più dispendiosa consiste nel calcolare le collisioni tra queste ed è quella su cui ci siamo concentrati. La realizzazione di una versione concorrente di questo calcolo deve prestare attenzione a possibili accessi concorrenti a una singola pallina da parte di entità computazionali distinte.
 
 = Design della soluzione
 
-== Definizione dei task
+== Definizione delle task
 
-Il task principale è la risoluzione delle collisioni tra tutte le coppie di palline. La seguente è la porzione di codice sequenziale che abbiamo intenzione di rendere concorrente:
+La task principale è la risoluzione delle collisioni tra tutte le coppie di palline. La seguente è la porzione di codice sequenziale che abbiamo intenzione di rendere concorrente:
 
 ```java
 for (int i = 0; i < balls.size() - 1; i++) {
@@ -29,23 +29,77 @@ for (int i = 0; i < balls.size() - 1; i++) {
 
 La risoluzione della collisione opera su due proprietà di ogni palla: posizione e velocità.
 
-(eventuale aggiunta: applyCollision concorrente)
+== Calcolo delle collisioni
+
+Il calcolo delle collisioni è diviso in 2 parti:
+1. risultati parziali dell'interazione tra le singole palline
+2. aggregazione di tutti i risultati parziali di ogni pallina
+
+Durante la prima fase, posizione e velocità della palla rimangono costanti e vengono modificate una e una sola volta nella seconda fase. I risultati parziali sono salvati in strutture dati apposite durante la prima fase e solo nella seconda verranno aggregati. È presente una dipendenza temporale tra le fasi e richiede una sincronizzazione.
+
+// I risultati parziali sono gli scostamenti rispetto ai valori di posizione e velocità della palla.
+// ```java
+// a.collisionMonitor.addPosition(a_deltap);
+// ...
+// a.collisionMonitor.addVelocity(a_deltav);
+// ```
+
+// Nell'esempio è riportata l'aggregazione relativa alla posizione.
+// ```java
+// var positionDisplacements = ball.collisionMonitor.getPositionDisplacements();
+// double avgDx = positionDisplacements.stream().mapToDouble(P2d::x).average().orElse(0);
+// double avgDy = positionDisplacements.stream().mapToDouble(P2d::y).average().orElse(0);
+// ball.pos = new P2d(ball.pos.x() + avgDx, ball.pos.y() + avgDy);
+// ```
 
 == Architettura
 
-L'architettura concorrente è di tipo Master-Worker e utilizza diverse entità per coordinazione e per l'aggregazione dei risultati.
+L'architettura concorrente impiega delle entità computazionali attive a cui viene delegato il calcolo delle collisioni. Queste entità utilizzano dei componenti passivi per la coordinazione e l'aggregazione dei risultati.
 
-I componenti attivi sono il master e i worker. All'interno del model, al momento del calcolo delle collisioni tra le coppie di palline, il master crea i worker e assegna loro il lavoro.
+Un'entità comune a entrambe le soluzioni è il `CollisionMonitor`: un monitor utilizzato per salvare i risultati delle singole collisioni e, solo al termine di tutti i calcoli, aggregarli applicando l'effetto finale alla palla. La prima parte del calcolo è effettuata in maniera concorrente, la seconda in maniera seriale una volta che la prima parte è conclusa.
 
-I componenti passivi sono:
-- latch per la sincronizzazione dei worker
-- monitor presenti all'interno di ogni pallina per l'aggregazione dei risultati
+Le varianti differiscono nella sincronizzazione tra le due fasi.
 
-// Abbiamo utilizzato il pattern architetturale MVC in combinazione con il pattern Observer. Il controller è un listener sugli eventi di input/output, mentre la view è un observer dell'aggiornamento dello stato della board (model).
+=== Variante multi-threading
 
-== Variante multi-threading
+Ciascun thread è realizzato attraverso `CollisionResolverWorker`. Internamente esso mantiene due semafori ad eventi: uno (`startWorkSem`) attraverso cui viene notificato dell'inizio della prima fase del calcolo delle collisioni; l'altro (`endWorkSem`) attraverso cui notifica di aver terminato il lavoro assegnatogli. Questa entità è creata inizialmente un'unica volta e rimane sempre attiva, in attesa della disponibilità del lavoro.
 
-== Variante task-based
+```java
+while (true) {
+  try {
+      startWorkSem.acquire();
+  } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+  }
+
+  ... (resolving collision)
+
+  endWorkSem.release();
+}
+```
+
+All'interno di `Board` è presente il `CollisionResolverManager`: l'entità computazionale responsabile della creazione, dell'esecuzione e della gestione dei thread (`CollisionResolverWorker`). Internamente esso mantiene un semaforo ad eventi (`endWorkSem`) per gestire la sincronizzazione tra le due fasi di calcolo della collisione (aspettare la terminazione dei lavori di tutti i thread).
+
+```java
+public void startWork() {
+    for (var w : workers) w.startWork(); // startWorkSem.release() da parte del worker
+}
+
+public void waitForWorkEnd() throws InterruptedException {
+    endWorkSem.acquire(numWorkers);
+}
+```
+
+=== Variante task-based
+
+All'interno di `Board` la gestione delle task è affidata a un `ExecutorService` e la task è modellata attraverso `CollisionResolvingTask`. Quest'ultima mantiene una barriera ciclica (`CyclicBarrier`) condivisa con la `Board` per realizzare la sincronizzazione tra le due fasi di calcolo della collisione.
+
+Seguendo l'approccio task-oriented, le task vengono create e assegnate ad ogni aggiornamento dello stato (`updateState`).
+```java
+for (int i = 0; i < nCores; i++) {
+    executor.execute(new CollisionResolvingTask(barrier, this.balls, i, nCores));
+}
+```
 
 = Performance
 
