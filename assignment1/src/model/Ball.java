@@ -97,9 +97,6 @@ public class Ball {
          */
         if (dist < minD && dist > 1e-6) {
 
-            // TODO: da vedere
-//            a.setLastHitter(b);
-//            b.setLastHitter(a);
             a.collisionMonitor.addLastHitter(a, b);
             b.collisionMonitor.addLastHitter(b, a);
 
@@ -128,16 +125,14 @@ public class Ball {
             double a_factor = overlap * (b.mass / totalM);
             double a_deltax = nx * a_factor;
             double a_deltay = ny * a_factor;
-
-            a.collisionMonitor.addPosition(new P2d(-a_deltax, -a_deltay));
-//            a.pos = new P2d(a.getPos().x() - a_deltax, a.getPos().y() - a_deltay);
+            P2d a_deltap = new P2d(-a_deltax, -a_deltay);
+            a.collisionMonitor.addPosition(a_deltap);
 
             double b_factor = overlap * (a.mass / totalM);
             double b_deltax = nx * b_factor;
             double b_deltay = ny * b_factor;
-
-            b.collisionMonitor.addPosition(new P2d(+b_deltax, +b_deltay));
-//            b.pos = new P2d(b.getPos().x() + b_deltax, b.getPos().y() + b_deltay);
+            P2d b_deltap = new P2d(+b_deltax, +b_deltay);
+            b.collisionMonitor.addPosition(b_deltap);
 
             /* Update velocities  */
 
@@ -150,10 +145,10 @@ public class Ball {
             if (dvn <= 0) { /* if not already separating, update velocities */
 
                 double imp = -(1 + RESTITUTION_FACTOR) * dvn / (1.0 / a.getMass() + 1.0 / b.getMass());
-                a.collisionMonitor.addVelocity(new V2d(-(imp / a.mass) * nx, -(imp / a.mass) * ny));
-                b.collisionMonitor.addVelocity(new V2d(+(imp / b.mass) * nx, +(imp / b.mass) * ny));
-//                a.vel = new V2d(a.vel.x() - (imp / a.mass) * nx, a.vel.y() - (imp / a.mass) * ny);
-//                b.vel = new V2d(b.vel.x() + (imp / b.mass) * nx, b.vel.y() + (imp / b.mass) * ny);
+                V2d a_deltav = new V2d(-(imp / a.mass) * nx, -(imp / a.mass) * ny);
+                V2d b_deltav = new V2d(+(imp / b.mass) * nx, +(imp / b.mass) * ny);
+                a.collisionMonitor.addVelocity(a_deltav);
+                b.collisionMonitor.addVelocity(b_deltav);
             }
         }
     }
