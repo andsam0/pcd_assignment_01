@@ -96,8 +96,8 @@ public class Board {
             throw new RuntimeException(e);
         }
 
-        for (int i = 0; i < balls.size() - 1; i++) {
-            Ball.applyCollisions(balls.get(i));
+        for (var ball : balls) {
+            Ball.applyCollisions(ball);
         }
         Ball.applyCollisions(playerBall);
         Ball.applyCollisions(cpuBall);
