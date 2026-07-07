@@ -29,7 +29,7 @@ public class MassiveBoardConf implements BoardConf {
 	public List<Ball> getSmallBalls() {		
 		var ballRadius = 0.01;
         var balls = new ArrayList<Ball>();
-		double spacing = 0.025;
+		double spacing = 0.015;
 
     	for (int row = 0; row < 45; row++) {
     		for (int col = 0; col < 100; col++) {
