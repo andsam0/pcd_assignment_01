@@ -16,18 +16,12 @@ public class Controller extends Thread implements InputListener {
     @Override
     public void run() {
         long lastUpdateTime = System.currentTimeMillis();
-//        long t0 = lastUpdateTime;
-//        int nFrames = 0;
 
         while (running) {
             long current = System.currentTimeMillis();
             long elapsed = current - lastUpdateTime;
             lastUpdateTime = current;
-            try {
-                board.updateState(elapsed);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            board.updateState(elapsed);
         }
     }
 

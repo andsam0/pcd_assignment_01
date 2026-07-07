@@ -44,7 +44,7 @@ public class Board {
         barrier = new CyclicBarrier(nCores + 1); // +1 for the main thread
     }
 
-    public void updateState(long dt) throws InterruptedException {
+    public void updateState(long dt) {
         // 1. Standard Movement
         playerBall.updateState(dt, this);
         cpuBall.updateState(dt, this);
@@ -96,11 +96,11 @@ public class Board {
 
         try {
             barrier.await();
-        } catch (BrokenBarrierException e) {
+        } catch (InterruptedException | BrokenBarrierException e) {
             throw new RuntimeException(e);
         }
 
-        for(var ball : balls) {
+        for (var ball : balls) {
             Ball.applyCollisions(ball);
         }
         Ball.applyCollisions(playerBall);
