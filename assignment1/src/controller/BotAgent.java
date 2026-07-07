@@ -17,7 +17,7 @@ public class BotAgent extends Thread {
     public void run() {
         while (running) {
             try {
-                Thread.sleep(random.nextInt(2000));
+                Thread.sleep(random.nextInt(500));
                 var cpu = board.getCpuBall();
                 if (cpu != null && cpu.isActive() && cpu.getVel().abs() < 0.1) {
                     V2d impulse = new V2d(random.nextDouble() - 0.5, random.nextDouble() - 0.5);
