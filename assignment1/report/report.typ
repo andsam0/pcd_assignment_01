@@ -136,6 +136,337 @@ Tabella risultati sistema seriale:
   [2000], [149.22],
 )
 
+Tabella risultati sistema concorrente (threads):
+#table(
+  columns: 3,
+  table.header([Cores], [Tempo medio ms], [medie]),
+  [1],
+  [154.22],
+  [Avg at pass 100 : 160.83
+    Avg at pass 200 : 158.82
+    Avg at pass 300 : 160.33
+    Avg at pass 400 : 152.6
+    Avg at pass 500 : 152.44
+    Avg at pass 600 : 152.48
+    Avg at pass 700 : 152.63
+    Avg at pass 800 : 152.59
+    Avg at pass 900 : 155.71
+    Avg at pass 1000 : 152.61
+    Avg at pass 1100 : 152.5
+    Avg at pass 1200 : 152.78
+    Avg at pass 1300 : 152.57
+    Avg at pass 1400 : 153.53
+    Avg at pass 1500 : 152.81
+    Avg at pass 1600 : 152.97
+    Avg at pass 1700 : 153.47
+    Avg at pass 1800 : 153.33
+    Avg at pass 1900 : 153.24
+    Avg at pass 2000 : 156.1],
+
+  [2],
+  [83.16],
+  [Avg at pass 100 : 83.43
+    Avg at pass 200 : 83.33
+    Avg at pass 300 : 84.49
+    Avg at pass 400 : 82.85
+    Avg at pass 500 : 82.75
+    Avg at pass 600 : 82.89
+    Avg at pass 700 : 82.98
+    Avg at pass 800 : 83.26
+    Avg at pass 900 : 83.09
+    Avg at pass 1000 : 83.0
+    Avg at pass 1100 : 83.11
+    Avg at pass 1200 : 82.96
+    Avg at pass 1300 : 83.05
+    Avg at pass 1400 : 83.11
+    Avg at pass 1500 : 83.09
+    Avg at pass 1600 : 83.33
+    Avg at pass 1700 : 83.32
+    Avg at pass 1800 : 82.91
+    Avg at pass 1900 : 83.21
+    Avg at pass 2000 : 83.1],
+
+  [3],
+  [57.18],
+  [Avg at pass 100 : 57.5
+    Avg at pass 200 : 57.66
+    Avg at pass 300 : 57.46
+    Avg at pass 400 : 56.98
+    Avg at pass 500 : 56.95
+    Avg at pass 600 : 56.99
+    Avg at pass 700 : 57.02
+    Avg at pass 800 : 57.09
+    Avg at pass 900 : 57.08
+    Avg at pass 1000 : 57.09
+    Avg at pass 1100 : 57.33
+    Avg at pass 1200 : 57.08
+    Avg at pass 1300 : 57.17
+    Avg at pass 1400 : 57.21
+    Avg at pass 1500 : 57.19
+    Avg at pass 1600 : 57.11
+    Avg at pass 1700 : 57.19
+    Avg at pass 1800 : 57.24
+    Avg at pass 1900 : 57.18
+    Avg at pass 2000 : 57.17],
+
+  [4],
+  [44.29],
+  [Avg at pass 100 : 44.74
+    Avg at pass 200 : 44.25
+    Avg at pass 300 : 44.84
+    Avg at pass 400 : 43.93
+    Avg at pass 500 : 43.92
+    Avg at pass 600 : 43.89
+    Avg at pass 700 : 43.98
+    Avg at pass 800 : 43.95
+    Avg at pass 900 : 43.97
+    Avg at pass 1000 : 44.19
+    Avg at pass 1100 : 43.97
+    Avg at pass 1200 : 44.25
+    Avg at pass 1300 : 44.16
+    Avg at pass 1400 : 47.22
+    Avg at pass 1500 : 43.99
+    Avg at pass 1600 : 44.03
+    Avg at pass 1700 : 44.07
+    Avg at pass 1800 : 44.03
+    Avg at pass 1900 : 44.14
+    Avg at pass 2000 : 44.35],
+
+  [5],
+  [36.23],
+  [Avg at pass 100 : 39.73
+    Avg at pass 200 : 38.25
+    Avg at pass 300 : 36.51
+    Avg at pass 400 : 35.75
+    Avg at pass 500 : 35.8
+    Avg at pass 600 : 35.77
+    Avg at pass 700 : 35.7
+    Avg at pass 800 : 35.89
+    Avg at pass 900 : 35.79
+    Avg at pass 1000 : 35.91
+    Avg at pass 1100 : 35.91
+    Avg at pass 1200 : 36.03
+    Avg at pass 1300 : 35.93
+    Avg at pass 1400 : 36.06
+    Avg at pass 1500 : 35.74
+    Avg at pass 1600 : 36.4
+    Avg at pass 1700 : 35.83
+    Avg at pass 1800 : 35.82
+    Avg at pass 1900 : 35.82
+    Avg at pass 2000 : 35.96],
+
+  [6],
+  [33.23],
+  [Avg at pass 100 : 41.78
+    Avg at pass 200 : 32.78
+    Avg at pass 300 : 34.06
+    Avg at pass 400 : 32.64
+    Avg at pass 500 : 32.13
+    Avg at pass 600 : 31.39
+    Avg at pass 700 : 31.47
+    Avg at pass 800 : 31.22
+    Avg at pass 900 : 32.13
+    Avg at pass 1000 : 31.54
+    Avg at pass 1100 : 32.85
+    Avg at pass 1200 : 33.11
+    Avg at pass 1300 : 33.16
+    Avg at pass 1400 : 32.85
+    Avg at pass 1500 : 33.64
+    Avg at pass 1600 : 34.94
+    Avg at pass 1700 : 33.2
+    Avg at pass 1800 : 33.58
+    Avg at pass 1900 : 33.07
+    Avg at pass 2000 : 32.96],
+
+  [7],
+  [43.46],
+  [Avg at pass 100 : 46.94
+    Avg at pass 200 : 44.6
+    Avg at pass 300 : 43.62
+    Avg at pass 400 : 44.05
+    Avg at pass 500 : 43.56
+    Avg at pass 600 : 42.76
+    Avg at pass 700 : 44.35
+    Avg at pass 800 : 42.13
+    Avg at pass 900 : 42.79
+    Avg at pass 1000 : 42.96
+    Avg at pass 1100 : 44.94
+    Avg at pass 1200 : 43.75
+    Avg at pass 1300 : 44.35
+    Avg at pass 1400 : 42.6
+    Avg at pass 1500 : 41.51
+    Avg at pass 1600 : 43.82
+    Avg at pass 1700 : 43.22
+    Avg at pass 1800 : 42.4
+    Avg at pass 1900 : 42.63
+    Avg at pass 2000 : 42.18],
+)
+
+Tabella risultati sistema concorrente (executor):
+#table(
+  columns: 3,
+  table.header([Cores], [Tempo medio ms], [medie]),
+  [1],
+  [132.59],
+  [Avg at pass 100 : 130.0
+    Avg at pass 200 : 131.53
+    Avg at pass 300 : 136.95
+    Avg at pass 400 : 136.44
+    Avg at pass 500 : 135.35
+    Avg at pass 600 : 134.35
+    Avg at pass 700 : 132.33
+    Avg at pass 800 : 132.0
+    Avg at pass 900 : 131.83
+    Avg at pass 1000 : 131.99
+    Avg at pass 1100 : 131.78
+    Avg at pass 1200 : 131.93
+    Avg at pass 1300 : 131.75
+    Avg at pass 1400 : 131.61
+    Avg at pass 1500 : 131.94
+    Avg at pass 1600 : 131.92
+    Avg at pass 1700 : 131.98
+    Avg at pass 1800 : 132.04
+    Avg at pass 1900 : 132.06
+    Avg at pass 2000 : 132.08],
+
+  [2],
+  [69.39],
+  [Avg at pass 100 : 69.02
+    Avg at pass 200 : 70.49
+    Avg at pass 300 : 70.21
+    Avg at pass 400 : 69.38
+    Avg at pass 500 : 69.25
+    Avg at pass 600 : 69.08
+    Avg at pass 700 : 69.03
+    Avg at pass 800 : 69.03
+    Avg at pass 900 : 69.08
+    Avg at pass 1000 : 69.16
+    Avg at pass 1100 : 69.08
+    Avg at pass 1200 : 69.29
+    Avg at pass 1300 : 69.4
+    Avg at pass 1400 : 69.26
+    Avg at pass 1500 : 69.16
+    Avg at pass 1600 : 69.58
+    Avg at pass 1700 : 69.39
+    Avg at pass 1800 : 69.28
+    Avg at pass 1900 : 69.51
+    Avg at pass 2000 : 70.14],
+
+  [3],
+  [45.71],
+  [Avg at pass 100 : 49.64
+    Avg at pass 200 : 46.0
+    Avg at pass 300 : 45.48
+    Avg at pass 400 : 45.67
+    Avg at pass 500 : 45.51
+    Avg at pass 600 : 45.74
+    Avg at pass 700 : 45.47
+    Avg at pass 800 : 45.31
+    Avg at pass 900 : 45.37
+    Avg at pass 1000 : 45.48
+    Avg at pass 1100 : 45.36
+    Avg at pass 1200 : 45.43
+    Avg at pass 1300 : 45.37
+    Avg at pass 1400 : 45.82
+    Avg at pass 1500 : 45.33
+    Avg at pass 1600 : 45.3
+    Avg at pass 1700 : 45.34
+    Avg at pass 1800 : 45.29
+    Avg at pass 1900 : 45.39
+    Avg at pass 2000 : 45.81],
+
+  [4],
+  [35.89],
+  [Avg at pass 100 : 41.4
+    Avg at pass 200 : 39.92
+    Avg at pass 300 : 36.17
+    Avg at pass 400 : 36.01
+    Avg at pass 500 : 36.04
+    Avg at pass 600 : 35.18
+    Avg at pass 700 : 34.99
+    Avg at pass 800 : 35.09
+    Avg at pass 900 : 35.03
+    Avg at pass 1000 : 35.02
+    Avg at pass 1100 : 35.17
+    Avg at pass 1200 : 35.07
+    Avg at pass 1300 : 35.21
+    Avg at pass 1400 : 35.03
+    Avg at pass 1500 : 35.04
+    Avg at pass 1600 : 35.37
+    Avg at pass 1700 : 34.99
+    Avg at pass 1800 : 35.1
+    Avg at pass 1900 : 36.01
+    Avg at pass 2000 : 36.02],
+
+  [5],
+  [30.15],
+  [Avg at pass 100 : 31.2
+    Avg at pass 200 : 29.65
+    Avg at pass 300 : 29.65
+    Avg at pass 400 : 29.52
+    Avg at pass 500 : 29.65
+    Avg at pass 600 : 29.67
+    Avg at pass 700 : 29.66
+    Avg at pass 800 : 29.58
+    Avg at pass 900 : 29.61
+    Avg at pass 1000 : 29.73
+    Avg at pass 1100 : 28.64
+    Avg at pass 1200 : 29.73
+    Avg at pass 1300 : 32.29
+    Avg at pass 1400 : 31.58
+    Avg at pass 1500 : 30.09
+    Avg at pass 1600 : 30.21
+    Avg at pass 1700 : 30.41
+    Avg at pass 1800 : 30.65
+    Avg at pass 1900 : 30.53
+    Avg at pass 2000 : 30.89],
+
+  [6],
+  [27.05],
+  [Avg at pass 100 : 35.87
+    Avg at pass 200 : 25.68
+    Avg at pass 300 : 25.85
+    Avg at pass 400 : 25.8
+    Avg at pass 500 : 25.6
+    Avg at pass 600 : 25.66
+    Avg at pass 700 : 25.46
+    Avg at pass 800 : 26.33
+    Avg at pass 900 : 25.66
+    Avg at pass 1000 : 25.59
+    Avg at pass 1100 : 26.3
+    Avg at pass 1200 : 25.8
+    Avg at pass 1300 : 27.14
+    Avg at pass 1400 : 27.63
+    Avg at pass 1500 : 28.3
+    Avg at pass 1600 : 27.19
+    Avg at pass 1700 : 27.4
+    Avg at pass 1800 : 27.33
+    Avg at pass 1900 : 27.35
+    Avg at pass 2000 : 29.04],
+
+  [7],
+  [30.00],
+  [Avg at pass 100 : 34.8
+    Avg at pass 200 : 30.24
+    Avg at pass 300 : 29.27
+    Avg at pass 400 : 28.99
+    Avg at pass 500 : 29.43
+    Avg at pass 600 : 29.21
+    Avg at pass 700 : 28.99
+    Avg at pass 800 : 28.45
+    Avg at pass 900 : 29.33
+    Avg at pass 1000 : 28.86
+    Avg at pass 1100 : 28.49
+    Avg at pass 1200 : 29.69
+    Avg at pass 1300 : 29.91
+    Avg at pass 1400 : 29.41
+    Avg at pass 1500 : 28.39
+    Avg at pass 1600 : 29.77
+    Avg at pass 1700 : 32.72
+    Avg at pass 1800 : 34.46
+    Avg at pass 1900 : 29.62
+    Avg at pass 2000 : 30.05],
+)
 == Efficienza
 
 = Verifica formale
