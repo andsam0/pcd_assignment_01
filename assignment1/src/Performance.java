@@ -9,10 +9,7 @@ public class Performance {
         Board model = new Board();
         model.init(new config.MassiveBoardConf());
 
-        BotAgent bot = new BotAgent(model);
-        bot.start();
-
-        int iterations = 50;
+        int iterations = 2000;
         int i = 0;
         long total = 0;
         long lastUpdateTime = System.currentTimeMillis();
@@ -22,8 +19,10 @@ public class Performance {
             total += elapsed;
             lastUpdateTime = current;
             model.updateState(elapsed);
+            if (i % 100 == 0) {
+                System.out.println("Avg at pass " + i + " : " + ((double) total) / 100);
+                total = 0;
+            }
         }
-        System.out.println(((double) total) / iterations);
-        bot.stopBot();
     }
 }

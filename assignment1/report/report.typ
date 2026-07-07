@@ -110,13 +110,38 @@ Abbiamo osservato che la porzione di programma non parallelizzabile è piuttosto
 Le performance sono state misurate con una macchina con processore X con N core bla bla bla.
 
 == Speedup
+Tabella risultati sistema seriale:
+#table(
+  columns: 2,
+  table.header([Interazione], [Tempo medio ms]),
+  [100], [152.72],
+  [200], [158.33],
+  [300], [159.20],
+  [400], [159.00],
+  [500], [159.51],
+  [600], [159.85],
+  [700], [159.96],
+  [800], [159.35],
+  [900], [160.51],
+  [1000], [159.74],
+  [1100], [160.29],
+  [1200], [160.31],
+  [1300], [159.88],
+  [1400], [154.29],
+  [1500], [149.04],
+  [1600], [149.65],
+  [1700], [149.44],
+  [1800], [149.18],
+  [1900], [149.96],
+  [2000], [149.22],
+)
 
 == Efficienza
 
 = Verifica formale
 
 // #let x = lq.arange(1, 13)
-// // #let y1 = (1, 2.0030017196089256, 2.941905655637812, 3.8552529552504615, 4.668102211486331, 5.46988708020022)
+// #let y1 = (1, 2.0030017196089256, 2.941905655637812, 3.8552529552504615, 4.668102211486331, 5.46988708020022)
 // #let speedup = (
 //   1,
 //   1.983480794299447,
