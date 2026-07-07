@@ -103,9 +103,15 @@ for (int i = 0; i < nCores; i++) {
 
 = Performance
 
+Abbiamo osservato che la porzione di programma non parallelizzabile è piuttosto elevata e abbiamo deciso di misurare le performance in 2 situazioni:
+1. Considera solamente le modifiche da noi effettuate, rimuovendo il più possibile l'overhead esterno. Le misure sono effettuate con il numero di thread/task crescente. L'unità di misura sono i millisecondi necessari per effettuare un aggiornamento dello stato. Il programma misura il tempo di aggiornamento medio per un certo numero di iterazioni.
+2. Comprende il programma nella sua interezza. Le misure riguardano il solo caso massimo.
+
+Le performance sono state misurate con una macchina con processore X con N core bla bla bla.
+
 == Speedup
 
-== Efficienza (da cambiare)
+== Efficienza
 
 = Verifica formale
 
