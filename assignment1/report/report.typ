@@ -103,8 +103,10 @@ for (int i = 0; i < nCores; i++) {
 
 = Performance
 
+// TODO: aggiungere che non c'è la view
+
 Abbiamo osservato che la porzione di programma non parallelizzabile è piuttosto elevata e abbiamo deciso di misurare le performance in 2 situazioni:
-1. Considera solamente le modifiche da noi effettuate, rimuovendo il più possibile l'overhead esterno. Questa configurazione prevede solamente le ball piccole, accuratamente distribuite in maniera che ciascuna collida con molte altre. Questa scelta fa sì che in questo primo caso le misure siano relative a uno stress test. Le misure sono effettuate con il numero di thread/task crescente. L'unità di misura sono i millisecondi necessari per effettuare un aggiornamento dello stato. Il programma misura il tempo di aggiornamento medio per un certo numero di iterazioni.
+1. Considera solamente le modifiche da noi effettuate, rimuovendo il più possibile l'overhead esterno, compresa la parte di view. Questa configurazione prevede solamente le ball piccole, accuratamente distribuite in maniera che ciascuna collida con molte altre. Questa scelta fa sì che in questo primo caso le misure siano relative a uno stress test. Le misure sono effettuate con il numero di thread/task crescente. L'unità di misura sono i millisecondi necessari per effettuare un aggiornamento dello stato. Il programma misura il tempo di aggiornamento medio per un certo numero di iterazioni.
 2. Comprende il programma nella sua integrità e interezza. Le misure riguardano il solo caso massimo.
 
 Le performance sono state misurate con una macchina con processore X con N core bla bla bla.
@@ -113,7 +115,9 @@ Le performance sono state misurate con una macchina con processore X con N core 
 
 I risultati riportati sono le medie ottenute attraverso 2000 iterazioni. Ciascuna tabella riporta il numero di core utilizzati, il tempo medio di aggiornamento dello stato e lo speedup, calcolato secondo la seguente formula:
 
-$S = T_1/T_N$ dove $T_1$ il tempo di esecuzione nel caso sequenziale, $T_N$ il tempo di esecuzione nel caso parallelo con $N$ processori
+$S = T_1/T_N$ dove $T_1$ il tempo di esecuzione nel caso sequenziale, $T_N$ il tempo di esecuzione nel caso parallelo con $N$ processori.
+
+=== Situazione 1 (stress test)
 
 #let avgSerial = 155.97
 Tempo medio del sistema sequenziale: #avgSerial (ms)
@@ -153,12 +157,214 @@ Tabella risultati sistema concorrente (executor):
 
   [6], [27.05], [5.766],
 
-  [7], [30.00], [5.199],
+  [7], [30.00], [5.20],
 )
 
 È possibile notare in entrambi i casi che lo speedup diminuisce al superamento del numero di core a disposizione del sistema. Nonostante la versione del programma che è stata misurata fosse esclusivamente CPU-bound, non abbiamo notato il miglioramento che generalmente si verifica utilizzando $N+1$ thread.
 
+=== Situazione 2 (scenario reale)
+
+Tempo medio del sistema sequenziale: 175.295 (ms)
+
+Tabella risultati sistema concorrente (threads):
+#table(
+  columns: 3,
+  table.header([Thread pool size], [Tempo medio (ms)], [Speedup]),
+  [1], [172.78], [1.02],
+
+  [2], [85.02], [2.06],
+
+  [3], [58.54], [2.99],
+
+  [4], [43.78], [4.00],
+
+  [5], [44.32], [3.96],
+
+  [6], [44.45], [3.94],
+
+  [7], [46.80], [3.75],
+)
+
+Tabella risultati sistema concorrente (executor):
+#table(
+  columns: 3,
+  table.header([Thread pool size], [Tempo medio (ms)], [Speedup]),
+  [1], [182.93], [0.96],
+
+  [2], [81.38], [2.15],
+
+  [3], [56.66], [3.09],
+
+  [4], [43.88], [3.99],
+
+  [5], [43.66], [4.01],
+
+  [6], [45.28], [3.87],
+
+  [7], [46.73], [3.75],
+)
+
 == Efficienza
+
+I risultati riportati utilizzano gli stessi dati della sezione sopra e impiegano la seguente formula:
+
+$E = S/N$ dove $S$ è lo speedup e $N$ il numero di processori.
+
+=== Situazione 1 (stress test)
+
+#let efficiency_threads_1 = (
+  1.011,
+  0.938,
+  0.909,
+  0.881,
+  0.861,
+  0.782,
+  0.513,
+)
+#let efficiency_executor_1 = (
+  1.176,
+  1.124,
+  1.137,
+  1.087,
+  1.035,
+  0.961,
+  0.743,
+)
+#show: lq.set-tick(
+  shorten-sub: 100%,
+)
+#show lq.selector(lq.diagram): set align(center)
+#let x = lq.arange(1, 8)
+
+#lq.diagram(
+  title: "Misura dell'efficienza nello stress test",
+  legend: (position: top + right),
+  width: 6cm,
+  height: 6cm,
+  xlim: (1, 7),
+  ylim: (0, 1.5),
+  lq.plot(x, efficiency_threads_1, stroke: blue, mark: "o", label: "threads"),
+  lq.plot(x, efficiency_executor_1, stroke: red, mark: "o", label: "executor"),
+  lq.xaxis(label: [Numero di processori N]),
+  lq.yaxis(label: [Efficienza E]),
+)
+
+// Tabella risultati del sistema concorrente (threads):
+
+// #table(
+//   columns: 3,
+//   table.header([Thread pool size], [Speedup], [Efficienza]),
+//   [1], [1.011], [1.011],
+
+//   [2], [1.875], [0.938],
+
+//   [3], [2.728], [0.909],
+
+//   [4], [3.522], [0.881],
+
+//   [5], [4.305], [0.861],
+
+//   [6], [4.694], [0.782],
+
+//   [7], [3.589], [0.513],
+// )
+
+
+// Tabella risultati del sistema concorrente (executor):
+// #table(
+//   columns: 3,
+//   table.header([Thread pool size], [Speedup], [Efficienza]),
+//   [1], [1.176], [1.176],
+
+//   [2], [2.248], [1.124],
+
+//   [3], [3.412], [1.137],
+
+//   [4], [4.346], [1.087],
+
+//   [5], [5.173], [1.035],
+
+//   [6], [5.766], [0.961],
+
+//   [7], [5.199], [0.743],
+// )
+
+=== Situazione 2 (scenario reale)
+
+#let efficiency_threads_2 = (
+  1.02,
+  1.03,
+  1.00,
+  1.00,
+  0.79,
+  0.66,
+  0.54,
+)
+#let efficiency_executor_2 = (
+  0.96,
+  1.08,
+  1.03,
+  1.00,
+  0.80,
+  0.65,
+  0.54,
+)
+#show: lq.set-tick(
+  shorten-sub: 100%,
+)
+#show lq.selector(lq.diagram): set align(center)
+#let x = lq.arange(1, 8)
+
+#lq.diagram(
+  title: "Misura dell'efficienza nello scenario reale",
+  legend: (position: top + right),
+  width: 6cm,
+  height: 6cm,
+  xlim: (1, 7),
+  ylim: (0, 1.5),
+  lq.plot(x, efficiency_threads_2, stroke: blue, mark: "o", label: "threads"),
+  lq.plot(x, efficiency_executor_2, stroke: red, mark: "o", label: "executor"),
+  lq.xaxis(label: [Numero di processori N]),
+  lq.yaxis(label: [Efficienza E]),
+)
+
+// Tabella risultati sistema concorrente (threads):
+// #table(
+//   columns: 3,
+//   table.header([Thread pool size], [Speedup], [Efficienza]),
+//   [1], [1.02], [1.02],
+
+//   [2], [2.06], [1.03],
+
+//   [3], [2.99], [1.00],
+
+//   [4], [4.00], [1.00],
+
+//   [5], [3.96], [0.79],
+
+//   [6], [3.94], [0.66],
+
+//   [7], [3.75], [0.54],
+// )
+
+// Tabella risultati sistema concorrente (executor):
+// #table(
+//   columns: 3,
+//   table.header([Thread pool size], [Speedup], [Efficienza]),
+//   [1], [0.96], [0.96],
+
+//   [2], [2.15], [1.08],
+
+//   [3], [3.09], [1.03],
+
+//   [4], [3.99], [1.00],
+
+//   [5], [4.01], [0.80],
+
+//   [6], [3.87], [0.65],
+
+//   [7], [3.75], [0.54],
+// )
 
 = Verifica formale
 
