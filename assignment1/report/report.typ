@@ -162,6 +162,51 @@ Tabella risultati sistema concorrente (executor):
 
 = Verifica formale
 
+== JPF
+
+Abbiamo utilizzato JPF (Java Path Finder) come strumento di model-checking per verificare la correttezza della parte concorrente del nostro programma nella variante multi-threading. La verifica è avvenuta su uno scenario ridotto ma significativo composto da 3 palle che collidono e sono gestite da thread diversi. Questo scenario è inoltre limitato al solo calcolo delle collisioni, dal momento che nel programma originale l'aggregazione è effettuata serialmente e non necessita quindi verifica.
+
+```java
+Ball b0 = new Ball(new P2d(0.0, 0.0), 5.0, 1.0, new V2d(1.0, 0.0));
+Ball b1 = new Ball(new P2d(6.0, 0.0), 5.0, 1.0, new V2d(-1.0, 0.0));
+List<Ball> balls = new ArrayList<>(List.of(b0, b1));
+Ball playerBall = new Ball(new P2d(3.0, 3.0), 5.0, 1.0, new V2d(0.5, 0.5));
+CollisionResolverManager manager = new CollisionResolverManager(balls, 2);
+manager.startWork();
+for (Ball b : balls) {
+    Ball.resolveCollision(playerBall, b);
+}
+manager.waitForWorkEnd();
+manager.stopWork();
+Ball.applyCollisions(playerBall);
+for (Ball b : balls) {
+    Ball.applyCollisions(b);
+}
+System.exit(0);
+```
+
+Per limitare la dimensione dello spazio degli stati abbiamo utilizzato dei blocchi atomici all'interno di `resolveCollision` per trattare le operazioni matematiche relative alla collisione come blocco atomico:
+```java
+if (dist < minD && dist > 1e-6) {
+  Verify.beginAtomic();
+  ... // collision calculation
+  Verify.endAtomic();
+
+  // operations on monitors
+  a.collisionMonitor.addLastHitter(a, b);
+  b.collisionMonitor.addLastHitter(b, a);
+  if (dvn <= 0) {
+      ...
+      a.collisionMonitor.addVelocity(a_deltav);
+      b.collisionMonitor.addVelocity(b_deltav);
+  }
+  a.collisionMonitor.addPosition(a_deltap);
+  b.collisionMonitor.addPosition(b_deltap);
+}
+```
+
+Inoltre è stato necessario utilizzare una variante "semplificata" del semaforo (`SimpleSemaphore`) che utilizzasse esclusivamente `synchronized` e `wait/notify` per ridurre la dimensione dello spazio degli stati.
+
 // #let x = lq.arange(1, 13)
 // #let y1 = (1, 2.0030017196089256, 2.941905655637812, 3.8552529552504615, 4.668102211486331, 5.46988708020022)
 // #let speedup = (
