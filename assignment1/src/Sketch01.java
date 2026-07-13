@@ -17,8 +17,8 @@ public class Sketch01 {
         model.addObserver(view);
         controller.start();
 
-//        BotAgent bot = new BotAgent(model);
-//        bot.start();
+        BotAgent bot = new BotAgent(model);
+        bot.start();
     }
 
 }

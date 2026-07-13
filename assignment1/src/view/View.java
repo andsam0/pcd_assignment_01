@@ -23,6 +23,7 @@ public class View implements BoardObserver {
 
 	@Override
 	public void modelUpdated(Board board) {
+		System.out.println("inside model updated in view: "+ Thread.currentThread().getName());
 		long current = System.currentTimeMillis();
 		long elapsed = current - lastUpdateTime;
 		lastUpdateTime = current;

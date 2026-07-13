@@ -46,16 +46,21 @@ public class ViewFrame extends JFrame {
     }
      
     public void render(){
+		System.out.println("start of render: "+ Thread.currentThread().getName());
+		long current = System.currentTimeMillis();
 		if (gameEnded) return;
 		long nf = sync.nextFrameToRender();
-        panel.repaint();
+		panel.repaint();
 		checkWinner();
 		try {
 			sync.waitForFrameRendered(nf);
 		} catch (InterruptedException ex) {
 			ex.printStackTrace();
 		}
-    }
+		long elapsed = System.currentTimeMillis() - current;
+		System.out.println("out of render sleep: "+ Thread.currentThread().getName());
+		System.out.println("rendered in "+elapsed+"ms");
+	}
 	private void checkWinner() {
 		// We check if the balls are null (which happens in your Board logic)
 		var pb = model.getPlayerBall();
