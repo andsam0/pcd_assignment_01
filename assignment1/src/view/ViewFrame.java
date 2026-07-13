@@ -5,6 +5,7 @@ import controller.InputListener;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.lang.reflect.InvocationTargetException;
 import javax.swing.*;
 
 public class ViewFrame extends JFrame {
@@ -50,13 +51,13 @@ public class ViewFrame extends JFrame {
 		long current = System.currentTimeMillis();
 		if (gameEnded) return;
 		long nf = sync.nextFrameToRender();
-		panel.repaint();
-		checkWinner();
 		try {
+			SwingUtilities.invokeAndWait(() ->  panel.repaint() );
 			sync.waitForFrameRendered(nf);
-		} catch (InterruptedException ex) {
+		} catch (InterruptedException | InvocationTargetException ex) {
 			ex.printStackTrace();
 		}
+		checkWinner();
 		long elapsed = System.currentTimeMillis() - current;
 		System.out.println("out of render sleep: "+ Thread.currentThread().getName());
 		System.out.println("rendered in "+elapsed+"ms");
@@ -107,6 +108,7 @@ public class ViewFrame extends JFrame {
 
 		@Override
 		protected void paintComponent(Graphics g) {
+			System.out.println("in paint component "+Thread.currentThread().getName());
 			super.paintComponent(g);
 			Graphics2D g2 = (Graphics2D) g;
 

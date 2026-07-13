@@ -50,59 +50,59 @@ public class Board {
             b.updateState(dt, this);
         }
 //        // 2. Small Balls Hole
-//        Iterator<Ball> it = balls.iterator();
-//        while (it.hasNext()) {
-//            Ball b = it.next();
-//            for (Ball hole : holes) {
-//                if (isInHole(b, hole)) {
-//                    if (b.getLastHitter() == playerBall) {
-//                        playerScore++;
-//                    } else if (b.getLastHitter() == cpuBall) {
-//                        cpuScore++;
-//                    }
-//                    it.remove();
-//                    break;
-//                }
-//            }
-//        }
-//        // 3. Player/CPU Hole
-//        for (Ball hole : holes) {
-//            if (isInHole(playerBall, hole)) {
-//                playerBall.setActive(false);
-//                notifyObservers();
-//                return;
-//            }
-//            if (isInHole(cpuBall, hole)) {
-//                cpuBall.setActive(false);
-//                notifyObservers();
-//                return;
-//            }
-//        }
-//        // 4. Physical Collisions
-//
-//        // collisions between small balls (concurrent)
-//        this.collisionResolverManager.startWork();
-//
-//        // collision between small balls and player balls
-//        for (var b : balls) {
-//            if (cpuBall != null) Ball.resolveCollision(cpuBall, b);
-//            if (playerBall != null) Ball.resolveCollision(playerBall, b);
-//        }
-//        if (playerBall != null && cpuBall != null) {
-//            Ball.resolveCollision(playerBall, cpuBall);
-//        }
-//
-//        try {
-//            this.collisionResolverManager.waitForWorkEnd();
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        }
-//
-//        for (var ball : balls) {
-//            Ball.applyCollisions(ball);
-//        }
-//        Ball.applyCollisions(playerBall);
-//        Ball.applyCollisions(cpuBall);
+        Iterator<Ball> it = balls.iterator();
+        while (it.hasNext()) {
+            Ball b = it.next();
+            for (Ball hole : holes) {
+                if (isInHole(b, hole)) {
+                    if (b.getLastHitter() == playerBall) {
+                        playerScore++;
+                    } else if (b.getLastHitter() == cpuBall) {
+                        cpuScore++;
+                    }
+                    it.remove();
+                    break;
+                }
+            }
+        }
+        // 3. Player/CPU Hole
+        for (Ball hole : holes) {
+            if (isInHole(playerBall, hole)) {
+                playerBall.setActive(false);
+                notifyObservers();
+                return;
+            }
+            if (isInHole(cpuBall, hole)) {
+                cpuBall.setActive(false);
+                notifyObservers();
+                return;
+            }
+        }
+        // 4. Physical Collisions
+
+        // collisions between small balls (concurrent)
+        this.collisionResolverManager.startWork();
+
+        // collision between small balls and player balls
+        for (var b : balls) {
+            if (cpuBall != null) Ball.resolveCollision(cpuBall, b);
+            if (playerBall != null) Ball.resolveCollision(playerBall, b);
+        }
+        if (playerBall != null && cpuBall != null) {
+            Ball.resolveCollision(playerBall, cpuBall);
+        }
+
+        try {
+            this.collisionResolverManager.waitForWorkEnd();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        for (var ball : balls) {
+            Ball.applyCollisions(ball);
+        }
+        Ball.applyCollisions(playerBall);
+        Ball.applyCollisions(cpuBall);
 
         notifyObservers();
     }
