@@ -1,0 +1,526 @@
+#import "@preview/lilaq:0.4.0" as lq
+
+#align(center, text(18pt)[*Assignment 1 di Programmazione Concorrente e Distribuita 2025/2026*])
+#align(center, text(12pt)[Mattia Ronchi, matr. 0001236997 \ Samorì Andrea 0001235969 \ Andrea Monaco 000])
+
+= Analisi del problema
+
+L'assignment ha l'obiettivo di realizzare una versione concorrente del gioco `Poool` fornito in 2 varianti:
+1. Variante multi-threading, utilizzando i default/platform threads
+2. Variante task-based, utilizzando il Java Executor Framework
+
+= Aspetti rilevanti per la concorrenza
+
+La logica principale del programma consiste nell'aggiornare lo stato del sistema, composto da un insieme di palle (giocatore e CPU) e palline, a seguito delle collisioni tra esse. Dato il costo quadratico ($O(n^2)$) del calcolo delle collisioni tra $n$ palline e dato che $n$ può aumentare significativamente (vedi `SmallBoard` vs `MassiveBoard`), la parte computazionalmente più dispendiosa consiste nel calcolare le collisioni tra queste ed è quella su cui ci siamo concentrati. La realizzazione di una versione concorrente di questo calcolo deve prestare attenzione a possibili accessi concorrenti a una singola pallina da parte di entità computazionali distinte.
+
+= Design della soluzione
+
+== Definizione delle task
+
+La task principale è la risoluzione delle collisioni tra tutte le coppie di palline. La seguente è la porzione di codice sequenziale che abbiamo intenzione di rendere concorrente:
+
+```java
+for (int i = 0; i < balls.size() - 1; i++) {
+  for (int j = i + 1; j < balls.size(); j++) {
+      Ball.resolveCollision(balls.get(i), balls.get(j));
+  }
+}
+```
+
+La risoluzione della collisione opera su due proprietà di ogni palla: posizione e velocità.
+
+== Calcolo delle collisioni
+
+Il calcolo delle collisioni è diviso in 2 parti:
+1. risultati parziali dell'interazione tra le singole palline
+2. aggregazione di tutti i risultati parziali di ogni pallina
+
+Durante la prima fase, posizione e velocità della palla rimangono costanti e vengono modificate una e una sola volta nella seconda fase. I risultati parziali sono salvati in strutture dati apposite durante la prima fase e solo nella seconda verranno aggregati. È presente una dipendenza temporale tra le fasi e richiede una sincronizzazione.
+
+// I risultati parziali sono gli scostamenti rispetto ai valori di posizione e velocità della palla.
+// ```java
+// a.collisionMonitor.addPosition(a_deltap);
+// ...
+// a.collisionMonitor.addVelocity(a_deltav);
+// ```
+
+// Nell'esempio è riportata l'aggregazione relativa alla posizione.
+// ```java
+// var positionDisplacements = ball.collisionMonitor.getPositionDisplacements();
+// double avgDx = positionDisplacements.stream().mapToDouble(P2d::x).average().orElse(0);
+// double avgDy = positionDisplacements.stream().mapToDouble(P2d::y).average().orElse(0);
+// ball.pos = new P2d(ball.pos.x() + avgDx, ball.pos.y() + avgDy);
+// ```
+
+== Architettura
+
+L'architettura concorrente impiega delle entità computazionali attive a cui viene delegato il calcolo delle collisioni. Queste entità utilizzano dei componenti passivi per la coordinazione e l'aggregazione dei risultati.
+
+Un'entità comune a entrambe le soluzioni è il `CollisionMonitor`: un monitor utilizzato per salvare i risultati delle singole collisioni e, solo al termine di tutti i calcoli, aggregarli applicando l'effetto finale alla palla. La prima parte del calcolo è effettuata in maniera concorrente, la seconda in maniera seriale una volta che la prima parte è conclusa.
+
+Le varianti differiscono nella sincronizzazione tra le due fasi.
+
+=== Variante multi-threading
+
+Ciascun thread è realizzato attraverso `CollisionResolverWorker`. Internamente esso mantiene due semafori ad eventi: uno (`startWorkSem`) attraverso cui viene notificato dell'inizio della prima fase del calcolo delle collisioni; l'altro (`endWorkSem`) attraverso cui notifica di aver terminato il lavoro assegnatogli. Questa entità è creata inizialmente un'unica volta e rimane sempre attiva, in attesa della disponibilità del lavoro.
+
+```java
+while (true) {
+  try {
+      startWorkSem.acquire();
+  } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+  }
+
+  ... (resolving collision)
+
+  endWorkSem.release();
+}
+```
+
+All'interno di `Board` è presente il `CollisionResolverManager`: l'entità computazionale responsabile della creazione, dell'esecuzione e della gestione dei thread (`CollisionResolverWorker`). Internamente esso mantiene un semaforo ad eventi (`endWorkSem`) per gestire la sincronizzazione tra le due fasi di calcolo della collisione (aspettare la terminazione dei lavori di tutti i thread).
+
+```java
+public void startWork() {
+    for (var w : workers) w.startWork(); // startWorkSem.release() da parte del worker
+}
+
+public void waitForWorkEnd() throws InterruptedException {
+    endWorkSem.acquire(numWorkers);
+}
+```
+
+=== Variante task-based
+
+All'interno di `Board` la gestione delle task è affidata a un `ExecutorService` e la task è modellata attraverso `CollisionResolvingTask`. Quest'ultima mantiene una barriera ciclica (`CyclicBarrier`) condivisa con la `Board` per realizzare la sincronizzazione tra le due fasi di calcolo della collisione.
+
+Seguendo l'approccio task-oriented, le task vengono create e assegnate ad ogni aggiornamento dello stato (`updateState`).
+```java
+for (int i = 0; i < nCores; i++) {
+    executor.execute(new CollisionResolvingTask(barrier, this.balls, i, nCores));
+}
+```
+
+= Performance
+
+// TODO: aggiungere che non c'è la view
+
+Abbiamo osservato che la porzione di programma non parallelizzabile è piuttosto elevata e abbiamo deciso di misurare le performance in 2 situazioni:
+1. Considera solamente le modifiche da noi effettuate, rimuovendo il più possibile l'overhead esterno, compresa la parte di view. Questa configurazione prevede solamente le ball piccole, accuratamente distribuite in maniera che ciascuna collida con molte altre. Questa scelta fa sì che in questo primo caso le misure siano relative a uno stress test. Le misure sono effettuate con il numero di thread/task crescente. L'unità di misura sono i millisecondi necessari per effettuare un aggiornamento dello stato. Il programma misura il tempo di aggiornamento medio per un certo numero di iterazioni.
+2. Comprende il programma nella sua integrità e interezza. Le misure riguardano il solo caso massimo.
+
+Le performance sono state misurate con un processore Intel i5 9400F 2.9 GHz a 6 core.
+
+== Speedup
+
+I risultati riportati sono le medie ottenute attraverso 2000 iterazioni. Ciascuna tabella riporta il numero di core utilizzati, il tempo medio di aggiornamento dello stato e lo speedup, calcolato secondo la seguente formula:
+
+$S = T_1/T_N$ dove $T_1$ il tempo di esecuzione nel caso sequenziale, $T_N$ il tempo di esecuzione nel caso parallelo con $N$ processori.
+
+=== Situazione 1 (stress test)
+
+#let avgSerial = 155.97
+Tempo medio del sistema sequenziale: #avgSerial (ms)
+
+Tabella risultati sistema concorrente (threads):
+#table(
+  columns: 3,
+  table.header([Thread pool size], [Tempo medio (ms)], [Speedup]),
+  [1], [154.22], [1.011],
+
+  [2], [83.16], [1.875],
+
+  [3], [57.18], [2.728],
+
+  [4], [44.29], [3.522],
+
+  [5], [36.23], [4.305],
+
+  [6], [33.23], [4.694],
+
+  [7], [43.46], [3.589],
+)
+
+Tabella risultati sistema concorrente (executor):
+#table(
+  columns: 3,
+  table.header([Thread pool size], [Tempo medio ms], [Speedup]),
+  [1], [132.59], [1.176],
+
+  [2], [69.39], [2.248],
+
+  [3], [45.71], [3.412],
+
+  [4], [35.89], [4.346],
+
+  [5], [30.15], [5.173],
+
+  [6], [27.05], [5.766],
+
+  [7], [30.00], [5.200],
+)
+
+È possibile notare in entrambi i casi che lo speedup diminuisce al superamento del numero di core a disposizione del sistema. Nonostante la versione del programma che è stata misurata fosse esclusivamente CPU-bound, non abbiamo notato il miglioramento che generalmente si verifica utilizzando $N+1$ thread.
+
+=== Situazione 2 (scenario reale)
+
+Tempo medio del sistema sequenziale: 175.295 (ms)
+
+Tabella risultati sistema concorrente (threads):
+#table(
+  columns: 3,
+  table.header([Thread pool size], [Tempo medio (ms)], [Speedup]),
+  [1], [172.78], [1.02],
+
+  [2], [85.02], [2.06],
+
+  [3], [58.54], [2.99],
+
+  [4], [43.78], [4.00],
+
+  [5], [44.32], [3.96],
+
+  [6], [44.45], [3.94],
+
+  [7], [46.80], [3.75],
+)
+
+Tabella risultati sistema concorrente (executor):
+#table(
+  columns: 3,
+  table.header([Thread pool size], [Tempo medio (ms)], [Speedup]),
+  [1], [182.93], [0.96],
+
+  [2], [81.38], [2.15],
+
+  [3], [56.66], [3.09],
+
+  [4], [43.88], [3.99],
+
+  [5], [43.66], [4.01],
+
+  [6], [45.28], [3.87],
+
+  [7], [46.73], [3.75],
+)
+
+I risultati di questo scenario vanno considerati tenendo conto che complessivamente la sola parte di view, che rappresenta la quasi totalità della parte non parallelizzabile, occupa circa 33ms per frame (tempo misurato rimuovendo interamente il calcolo delle collisioni). Nel caso sequenziale il tempo del solo calcolo delle collisioni risulta essere circa 142ms (175-33), mentre nel caso concorrente migliore esso risulta essere di circa 12ms (45-33), indice di un forte miglioramento. Questi tempi sono inferiori a quelli dello stress test perché in quel caso tutte le palline sono continuamente in collisione.
+
+== Efficienza
+
+I risultati riportati utilizzano gli stessi dati della sezione sopra e impiegano la seguente formula:
+
+$E = S/N$ dove $S$ è lo speedup e $N$ il numero di processori.
+
+=== Situazione 1 (stress test)
+
+#let efficiency_threads_1 = (
+  1.011,
+  0.938,
+  0.909,
+  0.881,
+  0.861,
+  0.782,
+  0.513,
+)
+#let efficiency_executor_1 = (
+  1.176,
+  1.124,
+  1.137,
+  1.087,
+  1.035,
+  0.961,
+  0.743,
+)
+#show: lq.set-tick(
+  shorten-sub: 100%,
+)
+#show lq.selector(lq.diagram): set align(center)
+#let x = lq.arange(1, 8)
+
+#lq.diagram(
+  title: "Misura dell'efficienza nello stress test",
+  legend: (position: top + right),
+  width: 6cm,
+  height: 6cm,
+  xlim: (1, 7),
+  ylim: (0, 1.5),
+  lq.plot(x, efficiency_threads_1, stroke: blue, mark: "o", label: "threads"),
+  lq.plot(x, efficiency_executor_1, stroke: red, mark: "o", label: "executor"),
+  lq.xaxis(label: [Numero di processori N]),
+  lq.yaxis(label: [Efficienza E]),
+)
+
+// Tabella risultati del sistema concorrente (threads):
+
+// #table(
+//   columns: 3,
+//   table.header([Thread pool size], [Speedup], [Efficienza]),
+//   [1], [1.011], [1.011],
+
+//   [2], [1.875], [0.938],
+
+//   [3], [2.728], [0.909],
+
+//   [4], [3.522], [0.881],
+
+//   [5], [4.305], [0.861],
+
+//   [6], [4.694], [0.782],
+
+//   [7], [3.589], [0.513],
+// )
+
+
+// Tabella risultati del sistema concorrente (executor):
+// #table(
+//   columns: 3,
+//   table.header([Thread pool size], [Speedup], [Efficienza]),
+//   [1], [1.176], [1.176],
+
+//   [2], [2.248], [1.124],
+
+//   [3], [3.412], [1.137],
+
+//   [4], [4.346], [1.087],
+
+//   [5], [5.173], [1.035],
+
+//   [6], [5.766], [0.961],
+
+//   [7], [5.199], [0.743],
+// )
+
+=== Situazione 2 (scenario reale)
+
+#let efficiency_threads_2 = (
+  1.02,
+  1.03,
+  1.00,
+  1.00,
+  0.79,
+  0.66,
+  0.54,
+)
+#let efficiency_executor_2 = (
+  0.96,
+  1.08,
+  1.03,
+  1.00,
+  0.80,
+  0.65,
+  0.54,
+)
+#show: lq.set-tick(
+  shorten-sub: 100%,
+)
+#show lq.selector(lq.diagram): set align(center)
+#let x = lq.arange(1, 8)
+
+#lq.diagram(
+  title: "Misura dell'efficienza nello scenario reale",
+  legend: (position: top + right),
+  width: 6cm,
+  height: 6cm,
+  xlim: (1, 7),
+  ylim: (0, 1.5),
+  lq.plot(x, efficiency_threads_2, stroke: blue, mark: "o", label: "threads"),
+  lq.plot(x, efficiency_executor_2, stroke: red, mark: "o", label: "executor"),
+  lq.xaxis(label: [Numero di processori N]),
+  lq.yaxis(label: [Efficienza E]),
+)
+
+// Tabella risultati sistema concorrente (threads):
+// #table(
+//   columns: 3,
+//   table.header([Thread pool size], [Speedup], [Efficienza]),
+//   [1], [1.02], [1.02],
+
+//   [2], [2.06], [1.03],
+
+//   [3], [2.99], [1.00],
+
+//   [4], [4.00], [1.00],
+
+//   [5], [3.96], [0.79],
+
+//   [6], [3.94], [0.66],
+
+//   [7], [3.75], [0.54],
+// )
+
+// Tabella risultati sistema concorrente (executor):
+// #table(
+//   columns: 3,
+//   table.header([Thread pool size], [Speedup], [Efficienza]),
+//   [1], [0.96], [0.96],
+
+//   [2], [2.15], [1.08],
+
+//   [3], [3.09], [1.03],
+
+//   [4], [3.99], [1.00],
+
+//   [5], [4.01], [0.80],
+
+//   [6], [3.87], [0.65],
+
+//   [7], [3.75], [0.54],
+// )
+
+= Verifica formale
+
+== JPF
+
+Abbiamo utilizzato JPF (Java Path Finder) come strumento di model-checking per verificare la correttezza della parte concorrente del nostro programma nella variante multi-threading. La verifica è avvenuta su uno scenario ridotto ma significativo composto da 3 palle che collidono e sono gestite da thread diversi. Questo scenario è inoltre limitato al solo calcolo delle collisioni, dal momento che nel programma originale l'aggregazione è effettuata serialmente e non necessita quindi verifica.
+
+```java
+Ball b0 = new Ball(new P2d(0.0, 0.0), 5.0, 1.0, new V2d(1.0, 0.0));
+Ball b1 = new Ball(new P2d(6.0, 0.0), 5.0, 1.0, new V2d(-1.0, 0.0));
+List<Ball> balls = new ArrayList<>(List.of(b0, b1));
+Ball playerBall = new Ball(new P2d(3.0, 3.0), 5.0, 1.0, new V2d(0.5, 0.5));
+CollisionResolverManager manager = new CollisionResolverManager(balls, 2);
+manager.startWork();
+for (Ball b : balls) {
+    Ball.resolveCollision(playerBall, b);
+}
+manager.waitForWorkEnd();
+manager.stopWork();
+Ball.applyCollisions(playerBall);
+for (Ball b : balls) {
+    Ball.applyCollisions(b);
+}
+System.exit(0);
+```
+
+Per limitare la dimensione dello spazio degli stati abbiamo utilizzato dei blocchi atomici all'interno di `resolveCollision` per trattare le operazioni matematiche relative alla collisione come blocco atomico:
+```java
+if (dist < minD && dist > 1e-6) {
+  Verify.beginAtomic();
+  ... // collision calculation
+  Verify.endAtomic();
+
+  // operations on monitors
+  a.collisionMonitor.addLastHitter(a, b);
+  b.collisionMonitor.addLastHitter(b, a);
+  if (dvn <= 0) {
+      ...
+      a.collisionMonitor.addVelocity(a_deltav);
+      b.collisionMonitor.addVelocity(b_deltav);
+  }
+  a.collisionMonitor.addPosition(a_deltap);
+  b.collisionMonitor.addPosition(b_deltap);
+}
+```
+
+Inoltre è stato necessario utilizzare una variante "semplificata" del semaforo (`SimpleSemaphore`) che utilizzasse esclusivamente `synchronized` e `wait/notify` per ridurre la dimensione dello spazio degli stati.
+
+// #let x = lq.arange(1, 13)
+// #let y1 = (1, 2.0030017196089256, 2.941905655637812, 3.8552529552504615, 4.668102211486331, 5.46988708020022)
+// #let speedup = (
+//   1,
+//   1.983480794299447,
+//   2.963325261839834,
+//   3.926338168992499,
+//   4.88345913517745,
+//   5.821932356761625,
+//   6.751883103519242,
+//   7.663927411389719,
+//   8.573884310284729,
+//   9.431003739710809,
+//   10.082615749276961,
+//   6.8906698457918525,
+// )
+// #let strong_scaling_efficiency = (
+//   1,
+//   0.9917403971497235,
+//   0.9877750872799447,
+//   0.9815845422481247,
+//   0.97669182703549,
+//   0.9703220594602708,
+//   0.9645547290741775,
+//   0.9579909264237149,
+//   0.9526538122538588,
+//   0.9431003739710808,
+//   0.916601431752451,
+//   0.574222487149321,
+// )
+
+// #show: lq.set-tick(
+//   shorten-sub: 100%,
+// )
+
+// #show lq.selector(lq.diagram): set align(center)
+
+// #lq.diagram(
+//   title: "Misura dello speedup",
+//   legend: (position: top + left),
+//   width: 6cm,
+//   height: 6cm,
+//   xlim: (1, 12),
+//   ylim: (1, 12),
+//   lq.plot(x, speedup, stroke: blue, mark: "s", label: "speedup"),
+//   lq.line((1, 1), (12, 12), stroke: (paint: orange, dash: "dashed"), label: "p"),
+//   lq.xaxis(label: [Number of processors p], ticks: x),
+//   lq.yaxis(label: [Speedup S(p)]),
+// )
+
+// #lq.diagram(
+//   title: "Misura della strong scaling efficiency",
+//   legend: (position: bottom + right),
+//   xlim: (1, 12),
+//   ylim: (0, 1),
+//   width: 6cm,
+//   height: 6cm,
+//   lq.plot(x, strong_scaling_efficiency, stroke: blue, mark: "s", label: "strong scaling efficiency"),
+//   lq.xaxis(label: [Number of processors p], ticks: x),
+//   lq.yaxis(label: [Strong scaling efficiency E(p)]),
+// )
+
+// Lo speedup aumenta come ci si aspetta fino ai 12 core, dove cala drasticamente a 7 quando ci si aspettava un valore vicino a 11. Questo calo di prestazioni, che si verifica anche negli altri test, non può attribuirsi esclusivamente alla porzione seriale del programma, in quanto è decisamente ridotta. Ipotizzo che il calo sia dovuto al fatto che, dal momento che tutti i processori del server, sia fisici che logici, sono occupati, il numero di context switch che coinvolgono il programma, cioè il numero di volte in cui il processo deve essere spostato da e verso un processore, complessivamente aumenti. Non escludo ci possano anche essere accessi non ottimali alla memoria dovuti all'architettura multi socket del server.
+
+// Per completezza si includono gli speedup in tutti i test:
+
+// #lq.diagram(
+//   title: "Misura dello speedup (p=11)",
+//   xaxis: (
+//     ticks: ("test1", "test2", "test3", "test4", "test5", "test6", "test7", "worst")
+//       .map(rotate.with(-45deg, reflow: true))
+//       .map(align.with(right))
+//       .enumerate(),
+//     subticks: none,
+//     label: "Test",
+//   ),
+//   lq.bar(
+//     range(8),
+//     (3.99, 9.09, 9.98, 9.89, 10.16, 12.88, 11.88, 10.08),
+//   ),
+//   yaxis: (
+//     label: "Speedup S(p)",
+//   ),
+// )
+
+// Nel primo test case lo speedup è ancora basso, probabilmente per il fatto che dato che pochi punti appartengono alla skyline la porzione seriale del programma è elevata. All'aumentare dei punti nello skyline e delle loro dimensioni, lo speedup aumenta in linea con quello che ci si aspetta. Nel test6 e test7 si ottiene addirittura uno speedup superlineare (ricordo che p=11), determinato probabilmente da un maggior accesso alla memoria cache.
+
+
+
+// = Conclusioni
+
+// Si riportano i tempi di esecuzione (in secondi) della versione seriale, della versione a memoria condivisa e della versione CUDA, i relativi speedup e il throughput della versione CUDA per tutti i test forniti:
+
+// #table(
+//   columns: 7,
+//   table.header(
+//     [Test], [Tempo seriale], [Tempo OMP (p=11)], [Speedup OMP], [Tempo CUDA], [Speedup CUDA], [Throughput CUDA]
+//   ),
+//   [test1-N100000-D3], [0.058], [0.014], [3.99], [0.728], [0.080], [41200464809],
+//   [test2-N100000-D4], [5.69], [0.626], [9.09], [0.671], [8.48], [59654114260],
+//   [test3-N100000-D10], [41.49], [4.16], [9.98], [1.07], [38.60], [93035242214],
+//   [test4-N100000-D8], [25.95], [2.62], [9.89], [0.96], [27.08], [83521114463],
+//   [test5-N100000-D20], [158.67], [15.61], [10.16], [1.01], [157.43], [198442351566],
+//   [test6-N100000-D50], [226.73], [17.60], [12.88], [1.10], [205.47], [453116041106],
+//   [test7-N100000-D200], [260.79], [21.94], [11.88], [1.12], [232.44], [1783279194091],
+//   [worst-N100000-D10], [134.04], [13.29], [10.08], [0.764], [175.42], [130870674417],
+// )
+
+// Visti i risultati ottenuti, in linea con quanto atteso, e le considerazioni precedenti, concludo ritenendo che le strategie di parallelismo adottate siano scalabili e dimostrino la loro efficienza in presenza di un grande quantitativo di dati.
