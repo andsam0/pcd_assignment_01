@@ -8,7 +8,7 @@ public class Performance {
     public static void main(String[] argv) {
         Board model = new Board();
         model.init(new config.MassiveBoardConf());
-        int iterations = 2000;
+        int iterations = 5000;
         int i = 0;
         long total = 0;
         long avg = 0;

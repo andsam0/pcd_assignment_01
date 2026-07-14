@@ -20,7 +20,7 @@ public class Controller extends Thread implements InputListener {
 //        int nFrames = 0;
 
         while (running) {
-            System.out.println("inside controller loop: "+ Thread.currentThread().getName());
+//            System.out.println("inside controller loop: "+ Thread.currentThread().getName());
             long current = System.currentTimeMillis();
             long elapsed = current - lastUpdateTime;
             lastUpdateTime = current;

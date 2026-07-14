@@ -41,7 +41,7 @@ public class Board {
     }
 
     public void updateState(long dt) {
-        System.out.println("inside update state: "+ Thread.currentThread().getName());
+//        System.out.println("inside update state: "+ Thread.currentThread().getName());
 
         // 1. Standard Movement
         playerBall.updateState(dt, this);

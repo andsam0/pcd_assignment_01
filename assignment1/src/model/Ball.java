@@ -88,7 +88,7 @@ public class Ball {
 
         double dx = b.pos.x() - a.pos.x();
         double dy = b.pos.y() - a.pos.y();
-        double dist = Math.sqrt((dx * dx) - (dy * dy));
+        double dist = Math.sqrt((dx * dx) + (dy * dy));
         double minD = a.radius + b.radius;
 
         /*
