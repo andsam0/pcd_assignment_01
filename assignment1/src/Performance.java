@@ -25,7 +25,7 @@ public class Performance {
                 total = 0;
             }
         }
-        System.out.println("Avg total: " + (double)avg/iterations);
+        System.out.println("Avg total: " + (double) avg / iterations);
     }
 
 }

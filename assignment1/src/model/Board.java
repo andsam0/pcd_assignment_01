@@ -17,7 +17,8 @@ public class Board {
     private int playerScore = 0;
     private int cpuScore = 0;
 
-    public Board(){}
+    public Board() {
+    }
 
     public void addObserver(BoardObserver o) {
         observers.add(o);
@@ -28,21 +29,22 @@ public class Board {
             o.modelUpdated(this);
         }
     }
+
     public void init(BoardConf conf) {
-    	balls = conf.getSmallBalls();    	
-    	playerBall = conf.getPlayerBall();
+        balls = conf.getSmallBalls();
+        playerBall = conf.getPlayerBall();
         cpuBall = conf.getCpuBall();
-    	bounds = conf.getBoardBoundary();
+        bounds = conf.getBoardBoundary();
         holes = conf.getHoles();
     }
-    
+
     public void updateState(long dt) {
         // 1. Standard Movement
-    	playerBall.updateState(dt, this);
+        playerBall.updateState(dt, this);
         cpuBall.updateState(dt, this);
-    	for (var b: balls) {
-    		b.updateState(dt, this);
-    	}
+        for (var b : balls) {
+            b.updateState(dt, this);
+        }
         // 2. Small Balls Hole
         Iterator<Ball> it = balls.iterator();
         while (it.hasNext()) {
@@ -73,41 +75,49 @@ public class Board {
             }
         }
         // 4. Physical Collisions
-    	for (int i = 0; i < balls.size() - 1; i++) {
+        for (int i = 0; i < balls.size() - 1; i++) {
             for (int j = i + 1; j < balls.size(); j++) {
                 Ball.resolveCollision(balls.get(i), balls.get(j));
             }
         }
 
-    	for (var b: balls) {
+        for (var b : balls) {
             if (cpuBall != null) Ball.resolveCollision(cpuBall, b);
             if (playerBall != null) Ball.resolveCollision(playerBall, b);
-    	}
+        }
         if (playerBall != null && cpuBall != null) {
             Ball.resolveCollision(playerBall, cpuBall);
         }
         notifyObservers();
     }
-    
-    public List<Ball> getBalls(){
-    	return balls;
+
+    public List<Ball> getBalls() {
+        return balls;
     }
-    
-    public Ball getPlayerBall() { return playerBall; }
+
+    public Ball getPlayerBall() {
+        return playerBall;
+    }
 
     public Ball getCpuBall() {
         return cpuBall;
     }
 
-    public List<Ball> getHoles() { return holes; }
+    public List<Ball> getHoles() {
+        return holes;
+    }
 
-    public Boundary getBounds(){
+    public Boundary getBounds() {
         return bounds;
     }
 
-    public int getPlayerScore() { return playerScore; }
+    public int getPlayerScore() {
+        return playerScore;
+    }
 
-    public int getCpuScore() { return cpuScore; }
+    public int getCpuScore() {
+        return cpuScore;
+    }
 
     private boolean isInHole(Ball b, Ball hole) {
         double dx = b.getPos().x() - hole.getPos().x();
